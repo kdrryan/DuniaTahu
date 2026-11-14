@@ -1,0 +1,9 @@
+name = "duniatahu-api"
+main = "workers/worker.js"
+compatibility_date = "2026-11-14"
+account_id = "ec28f930afa6265cb780e1045a87dedc"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "duniatahu-db"
+database_id = "e174c082-ae9e-4aba-9e23-d32e0b9d0dfe"
