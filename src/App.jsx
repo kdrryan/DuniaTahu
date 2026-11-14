@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -23,22 +24,53 @@ import {
 
 function App() {
   const [updateInfo, setUpdateInfo] = useState(null);
+  const updateDialogOpenRef = useRef(false);
 
   useEffect(() => {
     let active = true;
+    let checking = false;
+    let appStateListener = null;
 
     const checkUpdate = async () => {
-      const update = await checkForUpdate();
+      if (checking || updateDialogOpenRef.current) {
+        return;
+      }
 
-      if (active && update) {
-        setUpdateInfo(update);
+      checking = true;
+
+      try {
+        const update = await checkForUpdate();
+
+        if (active && update) {
+          updateDialogOpenRef.current = true;
+          setUpdateInfo(update);
+        }
+      } finally {
+        checking = false;
       }
     };
 
+    // Check immediately when the app starts.
     checkUpdate();
+
+    // Check again whenever the app returns to the foreground.
+    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        checkUpdate();
+      }
+    }).then((listener) => {
+      if (active) {
+        appStateListener = listener;
+      } else {
+        listener.remove();
+      }
+    }).catch((error) => {
+      console.error('Pemeriksaan status aplikasi gagal:', error);
+    });
 
     return () => {
       active = false;
+      appStateListener?.remove();
     };
   }, []);
 
@@ -57,7 +89,10 @@ function App() {
         <AlertDialog
           open={Boolean(updateInfo)}
           onOpenChange={(open) => {
-            if (!open) setUpdateInfo(null);
+            if (!open) {
+              updateDialogOpenRef.current = false;
+              setUpdateInfo(null);
+            }
           }}
         >
           <AlertDialogContent>
