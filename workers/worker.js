@@ -65,37 +65,81 @@ async function generateAI(env, prompt) {
     throw new Error("GEMINI_API_KEY belum dikonfigurasi");
   }
 
-  const response = await fetch(
-    `${GEMINI_API_URL}/${MODEL}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "x-goog-api-key": env.GEMINI_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [
+  const controller = new AbortController();
+  const timeoutMs = 12000;
+  const startedAt = Date.now();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let response;
+  let responseText;
+
+  console.info("Gemini request started", { model: MODEL });
+
+  try {
+    response = await fetch(
+      `${GEMINI_API_URL}/${MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": env.GEMINI_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text: "Kamu adalah AI edukasi DuniaTahu. Jawab secara akurat, menarik, mudah dipahami, dan hanya keluarkan JSON yang valid.",
+              },
+            ],
+          },
+          contents: [
             {
-              text: "Kamu adalah AI edukasi DuniaTahu. Jawab secara akurat, menarik, mudah dipahami, dan hanya keluarkan JSON yang valid.",
+              role: "user",
+              parts: [{ text: prompt }],
             },
           ],
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
+          generationConfig: {
+            maxOutputTokens: 1800,
+            responseMimeType: "application/json",
           },
-        ],
-        generationConfig: {
-          maxOutputTokens: 1800,
-          responseMimeType: "application/json",
-        },
-      }),
-    }
-  );
+        }),
+        signal: controller.signal,
+      }
+    );
 
-  const result = await response.json().catch(() => ({}));
+    console.info("Gemini response received", {
+      status: response.status,
+      elapsedMs: Date.now() - startedAt,
+    });
+
+    responseText = await response.text();
+  } catch (error) {
+    const elapsedMs = Date.now() - startedAt;
+
+    if (controller.signal.aborted) {
+      console.error("Gemini request timed out", { elapsedMs });
+      throw new Error("GEMINI_TIMEOUT");
+    }
+
+    console.error("Gemini request failed", {
+      name: error?.name || "Error",
+      elapsedMs,
+    });
+    throw new Error("GEMINI_NETWORK_ERROR");
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  let result;
+  try {
+    result = JSON.parse(responseText);
+  } catch {
+    console.error("Gemini returned invalid JSON", {
+      status: response.status,
+      responseLength: responseText?.length || 0,
+    });
+    throw new Error("GEMINI_INVALID_RESPONSE");
+  }
 
   if (!response.ok) {
     console.error("Gemini API error:", result);
