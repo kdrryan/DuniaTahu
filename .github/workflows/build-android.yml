@@ -4,7 +4,20 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag GitHub Release, contoh v1.1.0"
+        required: false
+        type: string
+
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -18,7 +31,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -58,8 +71,17 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DuniaTahu-APK
           path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload APK to GitHub Release
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.release_tag }}
+          files: android/app/build/outputs/apk/release/app-release.apk
+          overwrite_files: true
+          fail_on_unmatched_files: true
