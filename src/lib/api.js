@@ -48,7 +48,15 @@ async function apiRequest(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      if (response.status >= 500) {
+      if (data?.code === 'AI_RATE_LIMITED') {
+        throw new ApiError('rate_limited');
+      }
+
+      if (data?.code === 'AI_INVALID_RESPONSE') {
+        throw new ApiError('invalid_response');
+      }
+
+      if (data?.code === 'AI_UNAVAILABLE' || response.status >= 500) {
         throw new ApiError('service');
       }
 
