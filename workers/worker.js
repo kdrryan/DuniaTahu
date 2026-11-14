@@ -62,62 +62,52 @@ function parseAIJson(content) {
 
 async function generateAI(env, prompt) {
   if (!env.GROQ_API_KEY) {
-    throw new Error("AI_UNAVAILABLE");
+    throw new Error("GROQ_API_KEY belum dikonfigurasi");
   }
 
-  let response;
-
-  try {
-    response = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are DuniaTahu, a friendly and accurate educational assistant. Adapt the length and depth to the user's intent. Be natural, clear, useful, and never invent facts. Return only valid JSON matching the requested schema.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_completion_tokens: 1800,
-        response_format: {
-          type: "json_object",
+  const response = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.GROQ_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Kamu adalah AI edukasi DuniaTahu. Jawab secara akurat, menarik, mudah dipahami, dan hanya keluarkan JSON yang valid.",
         },
-      }),
-    });
-  } catch (error) {
-    console.error("AI provider connection failed:", error);
-    throw new Error("AI_UNAVAILABLE");
-  }
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 1,
+      max_completion_tokens: 1800,
+      response_format: {
+        type: "json_object",
+      },
+    }),
+  });
 
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    console.error("AI provider request failed:", response.status);
-    throw new Error(response.status === 429 ? "AI_RATE_LIMITED" : "AI_UNAVAILABLE");
+    console.error("Groq error:", result);
+    throw new Error(
+      result.error?.message || "Gagal menghubungi layanan AI"
+    );
   }
 
   const content = result.choices?.[0]?.message?.content;
 
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("AI_INVALID_RESPONSE");
+  if (!content) {
+    throw new Error("AI tidak menghasilkan jawaban");
   }
 
-  try {
-    return parseAIJson(content);
-  } catch (error) {
-    console.error("AI response format invalid:", error);
-    throw new Error("AI_INVALID_RESPONSE");
-  }
+  return parseAIJson(content);
 }
 
 // ==========================================
@@ -353,22 +343,12 @@ export default {
     } catch (error) {
       console.error("Worker error:", error);
 
-      const code = [
-        "AI_UNAVAILABLE",
-        "AI_RATE_LIMITED",
-        "AI_INVALID_RESPONSE",
-      ].includes(error.message)
-        ? error.message
-        : "internal_error";
-
-      const status =
-        code === "AI_RATE_LIMITED" || code === "AI_UNAVAILABLE"
-          ? 503
-          : code === "AI_INVALID_RESPONSE"
-            ? 502
-            : 500;
-
-      return json({ code }, status);
+      return json(
+        {
+          error: error.message || "Terjadi kesalahan pada server",
+        },
+        500
+      );
     }
   },
 };
