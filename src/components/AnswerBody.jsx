@@ -6,17 +6,11 @@ const components = {
   ),
   strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
   em: ({ children }) => <em className="italic text-foreground/80">{children}</em>,
-  ul: ({ children }) => <ul className="mb-2.5 space-y-1.5 pl-0.5 last:mb-0">{children}</ul>,
+  ul: ({ children }) => <ul className="mb-2.5 list-disc space-y-1.5 pl-5 text-[13.5px] text-foreground/75 last:mb-0">{children}</ul>,
   ol: ({ children }) => (
-    <ol className="mb-2.5 list-decimal space-y-1.5 pl-4 text-[13.5px] text-foreground/75 last:mb-0">
+    <ol className="mb-2.5 list-decimal space-y-1.5 pl-5 text-[13.5px] text-foreground/75 last:mb-0">
       {children}
     </ol>
-  ),
-  li: ({ children }) => (
-    <li className="flex gap-2 text-[13.5px] leading-[1.65] text-foreground/75">
-      <span className="mt-[8px] h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-      <span>{children}</span>
-    </li>
   ),
   h2: ({ children }) => (
     <h2 className="mb-2 mt-4 text-[15px] font-bold text-foreground first:mt-0">{children}</h2>
