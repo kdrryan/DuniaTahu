@@ -88,7 +88,6 @@ async function generateAI(env, prompt) {
           },
         ],
         generationConfig: {
-          temperature: 1,
           maxOutputTokens: 1800,
           responseMimeType: "application/json",
         },
