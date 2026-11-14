@@ -18,6 +18,9 @@ const components = {
       <span>{children}</span>
     </li>
   ),
+  h2: ({ children }) => (
+    <h2 className="mb-2 mt-4 text-[15px] font-bold text-foreground first:mt-0">{children}</h2>
+  ),
   h3: ({ children }) => (
     <h3 className="mb-1.5 mt-3 text-[13.5px] font-semibold text-foreground first:mt-0">{children}</h3>
   ),
