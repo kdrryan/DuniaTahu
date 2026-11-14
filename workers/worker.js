@@ -172,41 +172,47 @@ async function askWorld(request, env) {
 
   const lang = body.lang === "en" ? "en" : "id";
 
-  if (question.length < 3) {
-    return json({ error: "Pertanyaan terlalu pendek" }, 400);
+  if (!question) {
+    return json({ code: "empty_question" }, 400);
   }
 
   const prompt = [
-    "Kamu adalah 'Tanya Dunia', pemandu rasa penasaran yang menjelaskan bagaimana dunia bekerja.",
-    `Pertanyaan pengguna: """${question}"""`,
+    "You are Tanya Dunia, the helpful curiosity guide inside DuniaTahu.",
+    `User message: """${question}"""`,
     lang === "en"
-      ? "Write title, answer, and quick_facts entirely in natural English."
-      : "Tulis title, answer, dan quick_facts sepenuhnya dalam Bahasa Indonesia yang natural.",
-    "Aturan menjawab:",
-    "- Akurat dan faktual. Jangan mengarang angka, nama, atau sumber.",
-    "- Gaya bicara hangat dan santai, seperti teman pintar.",
-    "- Jelaskan mekanismenya: kenapa dan bagaimana, bukan cuma apa.",
-    "- Panjang jawaban 120-220 kata.",
-    "- Boleh menggunakan satu daftar berpoin bila membantu.",
-    "- quick_facts berisi tiga fakta pendukung yang menarik.",
-    "- Setiap quick_fact maksimal 130 karakter.",
-    'Keluarkan JSON dengan struktur: {"title":"judul","answer":"jawaban","quick_facts":["fakta 1","fakta 2","fakta 3"]}',
+      ? "Write every user-facing field in natural English."
+      : "Tulis semua bagian yang ditujukan kepada pengguna dalam Bahasa Indonesia yang natural.",
+    "First understand the user's intent, then choose the appropriate response style:",
+    "- Greetings, thanks, acknowledgements, and casual conversation: respond warmly and naturally in 1-2 short sentences. Do not force an educational lecture.",
+    "- Very short or simple factual questions: answer directly in 1-3 clear sentences, adding a brief explanation only when useful.",
+    "- Educational or explanatory questions: give a clear, well-structured explanation, usually 120-220 words.",
+    "For explanatory answers, use light Markdown formatting: short paragraphs, helpful **bold** terms, and ## or ### headings or bullet points when they genuinely improve readability. Avoid one long paragraph.",
+    "Explain both why and how when relevant. Start with the direct answer before adding context or examples.",
+    "Be accurate, age-accessible, warm, and conversational. Do not invent statistics, names, citations, or certainty. If a question is ambiguous, briefly ask what the user means instead of guessing.",
+    "The title should be concise and relevant. For greetings or casual messages, it may be empty.",
+    "quick_facts should contain up to three useful supporting facts for educational answers. For greetings or casual conversation, return an empty array. Each item must be concise.",
+    'Return valid JSON only with this structure: {"title":"short title or empty string","answer":"answer using optional Markdown","quick_facts":["fact 1","fact 2"]}',
   ].join("\n");
 
   const generated = await generateAI(env, prompt);
+  const answer =
+    typeof generated.answer === "string" ? generated.answer.trim() : "";
 
-  if (!generated.answer) {
-    throw new Error("Jawaban gagal dibuat");
+  if (!answer) {
+    throw new Error("AI_INVALID_RESPONSE");
   }
+
+  const quickFacts = Array.isArray(generated.quick_facts)
+    ? generated.quick_facts
+        .filter((item) => typeof item === "string" && item.trim())
+        .slice(0, 3)
+        .map((item) => item.trim().slice(0, 220))
+    : [];
 
   return json({
     title: String(generated.title || "").slice(0, 120),
-    answer: String(generated.answer).slice(0, 4000),
-    quick_facts: Array.isArray(generated.quick_facts)
-      ? generated.quick_facts.slice(0, 3).map((item) =>
-          String(item).slice(0, 220)
-        )
-      : [],
+    answer: answer.slice(0, 4000),
+    quick_facts: quickFacts,
     lang,
     engine: "groq/" + MODEL,
   });
