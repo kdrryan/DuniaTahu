@@ -36,11 +36,23 @@ const components = {
   ),
 };
 
+function normalizeMarkdown(value) {
+  return String(value)
+    .replace(/\r\n?/g, '\n')
+    // Recover headings that the model accidentally appends to a paragraph.
+    .replace(/([^\n])\s+(#{1,3}\s+)/g, '$1\n\n$2')
+    // Convert inline decorative bullets into proper Markdown list items.
+    .replace(/[ \t]+•[ \t]*/g, '\n- ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default function AnswerBody({ text }) {
   if (!text) return null;
+
   return (
     <div>
-      <ReactMarkdown components={components}>{text}</ReactMarkdown>
+      <ReactMarkdown components={components}>{normalizeMarkdown(text)}</ReactMarkdown>
     </div>
   );
 }
