@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Browser } from '@capacitor/browser';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
@@ -62,24 +63,27 @@ function App() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                Pembaruan DuniaTahu tersedia!
+                DuniaTahu Update Available!
               </AlertDialogTitle>
 
               <AlertDialogDescription>
-                Versi terbaru {updateInfo?.latestVersion} sudah tersedia.
-                <br />
-                <br />
-                {updateInfo?.notes}
+                A new version ({updateInfo?.latestVersion}) is available.
               </AlertDialogDescription>
             </AlertDialogHeader>
 
             <AlertDialogFooter>
               <AlertDialogCancel>
-                Nanti
+                Later
               </AlertDialogCancel>
 
-              <AlertDialogAction onClick={() => setUpdateInfo(null)}>
-                Mengerti
+              <AlertDialogAction
+                onClick={() => {
+                  if (updateInfo?.apkUrl) {
+                    Browser.open({ url: updateInfo.apkUrl });
+                  }
+                }}
+              >
+                Update Now
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
