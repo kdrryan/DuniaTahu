@@ -138,7 +138,7 @@ async function getLatestVersion() {
   const release = await response.json();
 
   const apk = release.assets?.find((asset) =>
-    asset.name.toLowerCase().endsWith(".apk")
+    asset.name.toLowerCase() === "app-release.apk"
   );
 
   if (!apk) {
