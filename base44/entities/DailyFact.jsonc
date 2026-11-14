@@ -1,0 +1,77 @@
+{
+  "name": "DailyFact",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "description": "Tanggal fakta, format YYYY-MM-DD pada zona waktu Asia/Jakarta. Satu fakta per tanggal per bahasa."
+    },
+    "lang": {
+      "type": "string",
+      "enum": [
+        "id",
+        "en"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ],
+      "default": "id",
+      "description": "Bahasa fakta: id (Indonesia) atau en (Inggris)."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "sains",
+        "sejarah",
+        "alam",
+        "teknologi",
+        "tubuh",
+        "angkasa"
+      ],
+      "enumColors": [
+        "yellow",
+        "red",
+        "green",
+        "blue",
+        "pink",
+        "purple"
+      ],
+      "description": "Tema fakta harian."
+    },
+    "emoji": {
+      "type": "string",
+      "description": "Satu emoji yang mewakili fakta."
+    },
+    "fact": {
+      "type": "string",
+      "description": "Kalimat fakta utama yang ditampilkan besar di dashboard."
+    },
+    "detail": {
+      "type": "string",
+      "description": "Penjelasan singkat bagaimana hal itu terjadi."
+    }
+  },
+  "required": [
+    "date",
+    "fact"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

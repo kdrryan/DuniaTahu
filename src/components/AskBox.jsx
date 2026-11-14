@@ -1,0 +1,91 @@
+import { useState } from 'react';
+import { ArrowUp, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/lib/LanguageContext';
+
+const SUGGESTIONS = {
+  id: [
+    'Kenapa langit berwarna biru?',
+    'Bagaimana gurita bisa ganti warna?',
+    'Kenapa kita cegukan?',
+    'Bagaimana piramida Giza dibangun?',
+  ],
+  en: [
+    'Why is the sky blue?',
+    'How do octopuses change color?',
+    'Why do we get hiccups?',
+    'How were the pyramids of Giza built?',
+  ],
+};
+
+export default function AskBox({ onAsk, loading }) {
+  const { lang, t } = useLanguage();
+  const [value, setValue] = useState('');
+  const suggestions = SUGGESTIONS[lang] || SUGGESTIONS.id;
+
+  const submit = (event) => {
+    event?.preventDefault();
+    const question = value.trim();
+    if (!question || loading) return;
+    onAsk(question);
+    setValue('');
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      submit();
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={submit}>
+        <div className="glass-soft rounded-2xl p-1.5 transition focus-within:border-foreground/25">
+          <textarea
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={2}
+            maxLength={300}
+            placeholder={t('ask.placeholder')}
+            className="w-full resize-none bg-transparent px-2.5 py-2 text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
+          />
+          <div className="flex items-center justify-between gap-2 px-1 pb-0.5">
+            <span className="hidden text-[11px] font-medium text-muted-foreground sm:block">
+              {t('ask.hint')}
+            </span>
+            <button
+              type="submit"
+              disabled={loading || !value.trim()}
+              className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-[12.5px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('ask.loading')}
+                </>
+              ) : (
+                <>
+                  {t('ask.submit')} <ArrowUp className="h-3.5 w-3.5" strokeWidth={2.6} />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {suggestions.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            disabled={loading}
+            onClick={() => onAsk(suggestion)}
+            className="rounded-full border border-foreground/10 px-2.5 py-1 text-[11.5px] font-medium text-foreground/55 transition hover:border-foreground/25 hover:text-foreground disabled:opacity-40"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
