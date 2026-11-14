@@ -34,10 +34,18 @@ const STRINGS = {
     'dialog.close': 'Tutup',
 
     'home.notice':
-      'Riwayat tersimpan di perangkatmu sendiri — tidak perlu akun, dan tidak dikirim ke mana pun selain mesin AI yang menjawab.',
-    'home.footer': 'Tanya Dunia — satu fakta baru setiap hari',
+      'Riwayat tersimpan di perangkatmu sendiri — tidak perlu akun.',
+    'home.footer': 'DuniaTahu — satu fakta baru setiap hari',
     'home.error.fact': 'Fakta hari ini belum bisa dimuat. Coba muat ulang halaman ya.',
     'home.error.answer': 'Jawabannya belum berhasil dibuat. Coba tanyakan lagi, ya.',
+    'error.network': 'Koneksi internet terputus. Periksa koneksimu, lalu coba lagi.',
+    'error.timeout': 'Prosesnya membutuhkan waktu lebih lama dari biasanya. Coba lagi, ya.',
+    'error.service': 'Maaf, layanan DuniaTahu sedang mengalami gangguan. Silakan coba beberapa saat lagi.',
+    'error.request': 'Pertanyaanmu belum dapat diproses. Coba periksa kembali pertanyaanmu.',
+    'error.invalid_response': 'Maaf, jawaban belum dapat ditampilkan dengan baik. Silakan coba lagi.',
+    'error.empty_response': 'Belum ada jawaban yang bisa ditampilkan. Coba tanyakan sekali lagi, ya.',
+    'error.unknown': 'Maaf, terjadi kendala yang tidak terduga. Silakan coba lagi.',
+
     'home.explain': 'Ceritakan lebih dalam soal fakta ini:',
 
     'settings.open': 'Pengaturan',
@@ -79,10 +87,18 @@ const STRINGS = {
     'dialog.close': 'Close',
 
     'home.notice':
-      'Your history is stored on your own device — no account needed, and nothing is sent anywhere except to the AI engine that answers.',
-    'home.footer': 'Tanya Dunia — one new fact every day',
+      'Your history is stored on your own device — no account needed.',
+    'home.footer': 'DuniaTahu — one new fact every day',
     'home.error.fact': 'Today’s fact could not be loaded. Try reloading the page.',
     'home.error.answer': 'The answer could not be generated. Please try asking again.',
+    'error.network': 'Your internet connection seems to be unavailable. Please check your connection and try again.',
+    'error.timeout': 'This is taking longer than expected. Please try again.',
+    'error.service': 'Sorry, DuniaTahu is temporarily experiencing difficulties. Please try again shortly.',
+    'error.request': 'Your question could not be processed. Please check it and try again.',
+    'error.invalid_response': 'Sorry, the answer could not be displayed properly. Please try again.',
+    'error.empty_response': 'There is no answer to display yet. Please try asking again.',
+    'error.unknown': 'Sorry, something unexpected happened. Please try again.',
+
     'home.explain': 'Tell me more about this fact:',
 
     'settings.open': 'Settings',

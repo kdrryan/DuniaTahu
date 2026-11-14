@@ -26,9 +26,24 @@ export default function Home() {
       .then((data) => {
         if (alive && data) setFact(data);
       })
-      .catch(() => {
-        if (alive) setError(t('home.error.fact'));
-      })
+      .catch((err) => {
+        if (alive) {
+          const allowedCodes = [
+            'network',
+            'timeout',
+            'service',
+            'request',
+            'invalid_response',
+            'empty_response',
+          ];
+
+    const code = allowedCodes.includes(err?.code)
+      ? err.code
+      : 'unknown';
+
+    setError(t(`error.${code}`));
+  }
+})
       .finally(() => {
         if (alive) setFactLoading(false);
       });
@@ -59,12 +74,27 @@ export default function Home() {
       setHistory(next);
       saveHistory(next);
       setCurrent(entry);
-    } catch {
-      setError(t('home.error.answer'));
-    } finally {
-      setAsking(false);
-    }
-  };
+      } catch (err) {
+  console.error('ASK ERROR:', err);
+
+  const allowedCodes = [
+    'network',
+    'timeout',
+    'service',
+    'request',
+    'invalid_response',
+    'empty_response',
+  ];
+
+  const code = allowedCodes.includes(err?.code)
+    ? err.code
+    : 'unknown';
+
+  setError(t(`error.${code}`));
+} finally {
+  setAsking(false);
+}
+};
 
   const explainFact = (dailyFact) => {
     if (!dailyFact) return;
