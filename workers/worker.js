@@ -62,52 +62,62 @@ function parseAIJson(content) {
 
 async function generateAI(env, prompt) {
   if (!env.GROQ_API_KEY) {
-    throw new Error("GROQ_API_KEY belum dikonfigurasi");
+    throw new Error("AI_UNAVAILABLE");
   }
 
-  const response = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${env.GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Kamu adalah AI edukasi DuniaTahu. Jawab secara akurat, menarik, mudah dipahami, dan hanya keluarkan JSON yang valid.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 1,
-      max_completion_tokens: 1800,
-      response_format: {
-        type: "json_object",
+  let response;
+
+  try {
+    response = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.GROQ_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are DuniaTahu, a friendly and accurate educational assistant. Adapt the length and depth to the user's intent. Be natural, clear, useful, and never invent facts. Return only valid JSON matching the requested schema.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_completion_tokens: 1800,
+        response_format: {
+          type: "json_object",
+        },
+      }),
+    });
+  } catch (error) {
+    console.error("AI provider connection failed:", error);
+    throw new Error("AI_UNAVAILABLE");
+  }
 
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    console.error("Groq error:", result);
-    throw new Error(
-      result.error?.message || "Gagal menghubungi layanan AI"
-    );
+    console.error("AI provider request failed:", response.status);
+    throw new Error(response.status === 429 ? "AI_RATE_LIMITED" : "AI_UNAVAILABLE");
   }
 
   const content = result.choices?.[0]?.message?.content;
 
-  if (!content) {
-    throw new Error("AI tidak menghasilkan jawaban");
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error("AI_INVALID_RESPONSE");
   }
 
-  return parseAIJson(content);
+  try {
+    return parseAIJson(content);
+  } catch (error) {
+    console.error("AI response format invalid:", error);
+    throw new Error("AI_INVALID_RESPONSE");
+  }
 }
 
 // ==========================================
@@ -172,41 +182,47 @@ async function askWorld(request, env) {
 
   const lang = body.lang === "en" ? "en" : "id";
 
-  if (question.length < 3) {
-    return json({ error: "Pertanyaan terlalu pendek" }, 400);
+  if (!question) {
+    return json({ code: "empty_question" }, 400);
   }
 
   const prompt = [
-    "Kamu adalah 'Tanya Dunia', pemandu rasa penasaran yang menjelaskan bagaimana dunia bekerja.",
-    `Pertanyaan pengguna: """${question}"""`,
+    "You are Tanya Dunia, the helpful curiosity guide inside DuniaTahu.",
+    `User message: """${question}"""`,
     lang === "en"
-      ? "Write title, answer, and quick_facts entirely in natural English."
-      : "Tulis title, answer, dan quick_facts sepenuhnya dalam Bahasa Indonesia yang natural.",
-    "Aturan menjawab:",
-    "- Akurat dan faktual. Jangan mengarang angka, nama, atau sumber.",
-    "- Gaya bicara hangat dan santai, seperti teman pintar.",
-    "- Jelaskan mekanismenya: kenapa dan bagaimana, bukan cuma apa.",
-    "- Panjang jawaban 120-220 kata.",
-    "- Boleh menggunakan satu daftar berpoin bila membantu.",
-    "- quick_facts berisi tiga fakta pendukung yang menarik.",
-    "- Setiap quick_fact maksimal 130 karakter.",
-    'Keluarkan JSON dengan struktur: {"title":"judul","answer":"jawaban","quick_facts":["fakta 1","fakta 2","fakta 3"]}',
+      ? "Write every user-facing field in natural English."
+      : "Tulis semua bagian yang ditujukan kepada pengguna dalam Bahasa Indonesia yang natural.",
+    "First understand the user's intent, then choose the appropriate response style:",
+    "- Greetings, thanks, acknowledgements, and casual conversation: respond warmly and naturally in 1-2 short sentences. Do not force an educational lecture.",
+    "- Very short or simple factual questions: answer directly in 1-3 clear sentences, adding a brief explanation only when useful.",
+    "- Educational or explanatory questions: give a clear, well-structured explanation, usually 120-220 words.",
+    "For explanatory answers, use light Markdown formatting: short paragraphs, helpful **bold** terms, and ## or ### headings or bullet points when they genuinely improve readability. Avoid one long paragraph.",
+    "Explain both why and how when relevant. Start with the direct answer before adding context or examples.",
+    "Be accurate, age-accessible, warm, and conversational. Do not invent statistics, names, citations, or certainty. If a question is ambiguous, briefly ask what the user means instead of guessing.",
+    "The title should be concise and relevant. For greetings or casual messages, it may be empty.",
+    "quick_facts should contain up to three useful supporting facts for educational answers. For greetings or casual conversation, return an empty array. Each item must be concise.",
+    'Return valid JSON only with this structure: {"title":"short title or empty string","answer":"answer using optional Markdown","quick_facts":["fact 1","fact 2"]}',
   ].join("\n");
 
   const generated = await generateAI(env, prompt);
+  const answer =
+    typeof generated.answer === "string" ? generated.answer.trim() : "";
 
-  if (!generated.answer) {
-    throw new Error("Jawaban gagal dibuat");
+  if (!answer) {
+    throw new Error("AI_INVALID_RESPONSE");
   }
+
+  const quickFacts = Array.isArray(generated.quick_facts)
+    ? generated.quick_facts
+        .filter((item) => typeof item === "string" && item.trim())
+        .slice(0, 3)
+        .map((item) => item.trim().slice(0, 220))
+    : [];
 
   return json({
     title: String(generated.title || "").slice(0, 120),
-    answer: String(generated.answer).slice(0, 4000),
-    quick_facts: Array.isArray(generated.quick_facts)
-      ? generated.quick_facts.slice(0, 3).map((item) =>
-          String(item).slice(0, 220)
-        )
-      : [],
+    answer: answer.slice(0, 4000),
+    quick_facts: quickFacts,
     lang,
     engine: "groq/" + MODEL,
   });
@@ -337,12 +353,22 @@ export default {
     } catch (error) {
       console.error("Worker error:", error);
 
-      return json(
-        {
-          error: error.message || "Terjadi kesalahan pada server",
-        },
-        500
-      );
+      const code = [
+        "AI_UNAVAILABLE",
+        "AI_RATE_LIMITED",
+        "AI_INVALID_RESPONSE",
+      ].includes(error.message)
+        ? error.message
+        : "internal_error";
+
+      const status =
+        code === "AI_RATE_LIMITED" || code === "AI_UNAVAILABLE"
+          ? 503
+          : code === "AI_INVALID_RESPONSE"
+            ? 502
+            : 500;
+
+      return json({ code }, status);
     }
   },
 };
