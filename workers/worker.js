@@ -1,7 +1,7 @@
 
 
-const MODEL = "openai/gpt-oss-120b";
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "gemini-3.8-flash";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
 const GITHUB_RELEASE_URL =
   "https://api.github.com/repos/kdrryan/DuniaTahu/releases/latest";
@@ -61,49 +61,57 @@ function parseAIJson(content) {
 }
 
 async function generateAI(env, prompt) {
-  if (!env.GROQ_API_KEY) {
-    throw new Error("GROQ_API_KEY belum dikonfigurasi");
+  if (!env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY belum dikonfigurasi");
   }
 
-  const response = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${env.GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        {
-          role: "system",
-          content:
-            "Kamu adalah AI edukasi DuniaTahu. Jawab secara akurat, menarik, mudah dipahami, dan hanya keluarkan JSON yang valid.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 1,
-      max_completion_tokens: 1800,
-      response_format: {
-        type: "json_object",
+  const response = await fetch(
+    `${GEMINI_API_URL}/${MODEL}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": env.GEMINI_API_KEY,
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [
+            {
+              text: "Kamu adalah AI edukasi DuniaTahu. Jawab secara akurat, menarik, mudah dipahami, dan hanya keluarkan JSON yang valid.",
+            },
+          ],
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 1,
+          maxOutputTokens: 1800,
+          responseMimeType: "application/json",
+        },
+      }),
+    }
+  );
 
   const result = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    console.error("Groq error:", result);
+    console.error("Gemini API error:", result);
     throw new Error(
       result.error?.message || "Gagal menghubungi layanan AI"
     );
   }
 
-  const content = result.choices?.[0]?.message?.content;
+  const content = result.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text || "")
+    .join("")
+    .trim();
 
   if (!content) {
+    console.error("Gemini returned no text:", result);
     throw new Error("AI tidak menghasilkan jawaban");
   }
 
@@ -222,7 +230,7 @@ async function askWorld(request, env) {
     answer: answer.slice(0, 4000),
     quick_facts: quickFacts,
     lang,
-    engine: "groq/" + MODEL,
+    engine: "google/" + MODEL,
   });
 }
 
