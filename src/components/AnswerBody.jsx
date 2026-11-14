@@ -43,6 +43,8 @@ function normalizeMarkdown(value) {
     .replace(/([^\n])\s+(#{1,3}\s+)/g, '$1\n\n$2')
     // Convert inline decorative bullets into proper Markdown list items.
     .replace(/[ \t]+•[ \t]*/g, '\n- ')
+    // Repair malformed numbered items such as "- 1.Item" or "- 1. Item".
+    .replace(/^\s*-\s+(\d+)\.\s*/gm, '$1. ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
