@@ -8,13 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Tag GitHub Release, contoh v1.1.0"
+        description: "Versi release, contoh v1.2.3. Kosongkan jika hanya ingin build APK."
         required: false
         type: string
-
-  release:
-    types:
-      - published
 
 permissions:
   contents: write
@@ -35,8 +31,6 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: 22
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
@@ -77,11 +71,15 @@ jobs:
           name: DuniaTahu-APK
           path: android/app/build/outputs/apk/release/app-release.apk
 
-      - name: Upload APK to GitHub Release
-        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
+      - name: Create GitHub Release and upload APK
+        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.release_tag }}
+          tag_name: ${{ inputs.release_tag }}
+          name: DuniaTahu ${{ inputs.release_tag }}
+          body: "DuniaTahu Android release."
           files: android/app/build/outputs/apk/release/app-release.apk
           overwrite_files: true
           fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
