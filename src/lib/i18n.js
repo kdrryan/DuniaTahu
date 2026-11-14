@@ -95,7 +95,7 @@ const STRINGS = {
     'error.network': 'Connection lost. Please try again.',
     'error.timeout': 'This is taking longer than expected. Please try again.',
     'error.service': 'Sorry, DuniaTahu is temporarily unavailable. Please try again shortly.',
-    'error.rate_limited': 'Too many requests are being processed. Please wait a moment and try again.'
+    'error.rate_limited': 'Too many requests are being processed. Please wait a moment and try again.',
     'error.request': 'Your question could not be processed. Please check it and try again.',
     'error.invalid_response': 'Sorry, the answer could not be displayed properly. Please try again.',
     'error.empty_response': 'There is no answer to display yet. Please try asking again.',
