@@ -35,7 +35,6 @@ export default function Home() {
             'request',
             'invalid_response',
             'empty_response',
-            'rate_limited',
           ];
 
     const code = allowedCodes.includes(err?.code)
@@ -85,7 +84,6 @@ export default function Home() {
     'request',
     'invalid_response',
     'empty_response',
-    'rate_limited',
   ];
 
   const code = allowedCodes.includes(err?.code)
