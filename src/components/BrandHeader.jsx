@@ -13,7 +13,7 @@ export default function BrandHeader() {
           <Sparkles className="h-4 w-4" strokeWidth={2.2} />
         </div>
         <div className="min-w-0">
-          <p className="truncate font-display text-[15px] leading-tight text-foreground">Tanya Dunia</p>
+          <p className="truncate font-display text-[15px] leading-tight text-foreground">DuniaTahu</p>
           <p className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {t('header.tagline')}
           </p>
