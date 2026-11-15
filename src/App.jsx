@@ -98,7 +98,7 @@ function App() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                DuniaTahu Update Available!
+                Ratio Update Available!
               </AlertDialogTitle>
 
               <AlertDialogDescription>
