@@ -1,62 +1,179 @@
-# Base44 Project
+# DuniaTahu
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+**DuniaTahu** is an educational knowledge app that helps people explore everyday questions and discover interesting facts. It combines an AI-powered question experience with a daily fact feature in a simple web and Android app.
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+The project is built with React and Vite, uses Cloudflare for its backend infrastructure, and integrates Google Gemini for AI-generated responses.
 
-## Prerequisites
+## Features
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
-5. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) — the local Base44 backend runs on it.
+- **Ask World** — ask questions and receive clear, accessible explanations powered by Google Gemini.
+- **Daily Fact** — discover a new knowledge fact each day.
+- **Question history** — revisit previous questions and answers.
+- **Language selection** — use the app in Indonesian or English.
+- **Appearance settings** — choose the app's visual theme.
+- **Web and Android** — use the web app or install the Android APK.
 
-Run `base44 --help` (or see the [CLI reference](https://docs.base44.com/developers/references/cli/commands/introduction)) for the full command surface.
+## Tech Stack
+
+| Area | Technology |
+| --- | --- |
+| Frontend | React, Vite, JavaScript |
+| UI | Tailwind CSS, Radix UI, Lucide |
+| Mobile | Capacitor |
+| Hosting | Cloudflare Pages |
+| Backend API | Cloudflare Workers |
+| Database and daily-fact cache | Cloudflare D1 |
+| AI provider | Google Gemini API — Gemini 3.5 Flash-Lite |
+| Android automation | GitHub Actions, Gradle |
+
+## Architecture
+
+```text
+                   ┌──────────────────────┐
+                   │   DuniaTahu Client   │
+                   │   React + Vite       │
+                   │   Web / Android      │
+                   └──────────┬───────────┘
+                              │ HTTPS
+                              ▼
+                   ┌──────────────────────┐
+                   │  Cloudflare Worker  │
+                   │    duniatahu-api     │
+                   └───────┬────────┬─────┘
+                           │        │
+                 AI request│        │Daily fact data
+                           ▼        ▼
+                 ┌─────────────┐  ┌─────────────┐
+                 │ Google      │  │ Cloudflare  │
+                 │ Gemini API │  │ D1 Database │
+                 └─────────────┘  └─────────────┘
+
+        Web frontend hosting: Cloudflare Pages
+        Android build pipeline: GitHub Actions
+```
+
+### Backend endpoints
+
+The Cloudflare Worker exposes the following endpoints:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/askWorld` | Generate an answer to a user's question |
+| POST | `/api/dailyFact` | Retrieve or generate the daily fact |
+| GET | `/api/version` | Check the latest Android release |
+
+The Daily Fact service stores facts in Cloudflare D1 by date and language, allowing the generated fact to be reused instead of regenerated for every request.
 
 ## Run Locally
 
-Three commands, from the project root:
+### Prerequisites
+
+- Node.js 22 or a compatible recent Node.js version
+- npm
+- Git
+
+### 1. Clone the repository
 
 ```bash
-base44 login   # one-time per machine
-base44 link    # one-time per clone
-base44 dev     # local backend + frontend together
+git clone https://github.com/kdrryan/DuniaTahu.git
+cd DuniaTahu
 ```
 
-Open the frontend URL that `base44 dev` prints (typically `http://localhost:5173`).
-
-Notes:
-
-- **Every fresh clone needs `base44 link`.** It writes `base44/.app.jsonc` (the app-id pointer), which is deliberately gitignored. Your app id is in the Builder URL (`app.base44.com/apps/<id>/...`); `base44 link --help` shows the non-interactive flags.
-- **`base44 dev` runs the frontend for you** (via `site.serveCommand` in this repo's `base44/config.jsonc`) — never run `npm run dev` yourself: alone it serves a UI with no backend behind it (`[base44] Proxy not enabled`, every `/api` call fails), and alongside `base44 dev` the second Vite silently takes the next port and you end up looking at the wrong one.
-- **The app must be published at least once for the UI to load under `base44 dev`.** The frontend boots by fetching app settings from the hosted app; before the first publish that fails and every page redirects to login. The local API works regardless.
-- Entities, functions, and auth run locally — entity data is **in-memory only**, wiped when `base44 dev` restarts. Everything else (Core integrations, OAuth login) is forwarded to your deployed app. Full breakdown: [Local development overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview).
-
-## Frontend Only, Hosted Backend
-
-To work on just the frontend against your app's live hosted backend:
+### 2. Install dependencies
 
 ```bash
-base44 dev --remote
+npm ci
 ```
 
-⚠️ In this mode writes go to your app's **production data** — plain `base44 dev` keeps everything local.
+### 3. Configure the API URL
 
-## Publish Your Changes
+Create a `.env.local` file in the project root:
 
-After pushing your changes to git, open the Base44 dashboard and publish the app:
+```env
+VITE_API_BASE_URL=https://duniatahu-api.christainmichael22.workers.dev
+```
+
+The API URL can be changed to point to another compatible backend environment.
+
+### 4. Start the development server
 
 ```bash
-base44 dashboard open
+npm run dev -- --host 0.0.0.0
 ```
 
-This repo syncs to Base44 through git, so publish from the dashboard rather than `base44 deploy` — a CLI deploy ships your local tree directly, bypassing the sync, and the deployed state silently diverges from the repo.
+Open the local URL printed by Vite, usually `http://localhost:5173`.
 
-## Docs & Support
+### 5. Create a production web build
 
-GitHub integration: [https://docs.base44.com/developers/app-code/local-development/github](https://docs.base44.com/developers/app-code/local-development/github)
+```bash
+npm run build
+```
 
-Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
+The production files are generated in the `dist/` directory.
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+## Cloudflare Backend
+
+The backend source code is in `workers/worker.js`, and its Cloudflare configuration is in `wrangler.toml`.
+
+The Worker uses:
+
+- **Gemini API:** configured through the `GEMINI_API_KEY` Worker secret.
+- **D1:** configured through the `DB` binding in `wrangler.toml`.
+
+Never commit API keys, credentials, signing files, or other secrets to the repository. Configure sensitive values through Cloudflare Worker secrets and GitHub Actions secrets.
+
+## Android Build
+
+DuniaTahu uses Capacitor to package the web application as an Android app. The Capacitor configuration is in `capacitor.config.ts`.
+
+A GitHub Actions workflow builds the signed release APK:
+
+1. Open the repository's **Actions** tab.
+2. Select **Build DuniaTahu APK**.
+3. Select **Run workflow** on the `main` branch.
+4. Leave `release_tag` empty to build an APK artifact only.
+5. Download the generated APK from the completed workflow run's artifacts.
+
+To publish an Android release, run the workflow with a version tag such as `v1.2.3`. The workflow creates a GitHub Release and attaches the APK.
+
+The Android signing keystore and passwords are supplied through GitHub Actions secrets. The permanent signing key must be preserved for future updates.
+
+## Project Structure
+
+```text
+DuniaTahu/
+├── .github/
+│   └── workflows/
+│       └── build-android.yml
+├── android/                 # Capacitor Android project
+├── public/                  # Static assets
+├── src/                     # React application
+├── workers/
+│   └── worker.js            # Cloudflare Workers API
+├── capacitor.config.ts      # Capacitor configuration
+├── package.json
+├── wrangler.toml            # Cloudflare Worker and D1 config
+└── vite.config.js
+```
+
+## Available Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Build the production frontend |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript checks |
+
+## Deployment Overview
+
+- **Frontend:** deployed to Cloudflare Pages.
+- **Backend:** deployed as the `duniatahu-api` Cloudflare Worker.
+- **Android:** built and distributed through GitHub Actions and GitHub Releases.
+
+Frontend and backend deployments are independent. Changes limited to the Cloudflare Worker do not require a new Android APK.
+
+---
+
+Made with curiosity by [@kdrryan](https://github.com/kdrryan).
