@@ -12,7 +12,7 @@ export const LANGUAGE_LOCALES = {
 
 const STRINGS = {
   id: {
-    'header.tagline': 'by @kdrryann',
+    'header.tagline': 'oleh @kdrryann',
     'header.cta': 'Mulai bertanya',
 
     'fact.label': 'Fakta hari ini',
