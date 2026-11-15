@@ -1,0 +1,4 @@
+c30b85abc328a0e9e246131548e276110e1abec62e296ba3646b893c4cb8308f  ratio-orbit-black-black-dot-light-background.png
+602454b3c296f006d8a6dd9dfd0ab1753f0f755262bf64df8eba6c5c0f7bbfc4  ratio-orbit-black-white-dot-transparent.png
+eba546489af8f5e08031188b0b0ce7dadb83050b85079b04f39ebaf44fbffa8e  ratio-orbit-white-black-dot-transparent.png
+deca819c756c62d12ff831e9d628480286fa0c09a9fa6ddc22c1e51b8b806f5f  ratio-orbit-white-white-dot-dark-background.png
