@@ -99,7 +99,10 @@ async function generateAI(env, prompt) {
             },
           ],
           generationConfig: {
-            maxOutputTokens: 1800,
+            thinkingConfig: {
+              thinkingLevel: "low",
+            },
+            maxOutputTokens: 4096,
             responseMimeType: "application/json",
           },
         }),
