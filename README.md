@@ -1,17 +1,40 @@
 # DuniaTahu
 
-**DuniaTahu** is an educational knowledge app that helps people explore everyday questions and discover interesting facts. It combines an AI-powered question experience with a daily fact feature in a simple web and Android app.
+<p align="center">
+  <strong>Discover more. Understand better.</strong><br />
+  An AI-powered educational app for clear answers and daily discoveries.
+</p>
 
-The project is built with React and Vite, uses Cloudflare for its backend infrastructure, and integrates Google Gemini for AI-generated responses.
+<p align="center">
+  <a href="https://duniatahu.pages.dev"><strong>Open Web App</strong></a>
+  · <a href="https://github.com/kdrryan/DuniaTahu/releases">Android Releases</a>
+  · <a href="https://github.com/kdrryan/DuniaTahu/issues">Report an Issue</a>
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React-Frontend-149eca?logo=react&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-Build-646CFF?logo=vite&logoColor=white" />
+  <img alt="Cloudflare" src="https://img.shields.io/badge/Cloudflare-Platform-F38020?logo=cloudflare&logoColor=white" />
+  <img alt="Google Gemini" src="https://img.shields.io/badge/Google_Gemini-AI-8E75B2?logo=googlegemini&logoColor=white" />
+  <img alt="Android" src="https://img.shields.io/badge/Android-App-3DDC84?logo=android&logoColor=white" />
+</p>
+
+---
+
+## About
+
+**DuniaTahu** is a learning-focused app for curious people. It turns questions into understandable explanations and makes discovering something new part of the daily routine.
+
+The project is available on the web and Android. Its frontend uses React and Vite, while Cloudflare and Google Gemini power the backend experience.
 
 ## Features
 
-- **Ask World** — ask questions and receive clear, accessible explanations powered by Google Gemini.
-- **Daily Fact** — discover a new knowledge fact each day.
+- **Ask World** — ask questions and get clear, accessible AI-generated explanations.
+- **Daily Fact** — discover an interesting knowledge fact every day.
 - **Question history** — revisit previous questions and answers.
-- **Language selection** — use the app in Indonesian or English.
-- **Appearance settings** — choose the app's visual theme.
-- **Web and Android** — use the web app or install the Android APK.
+- **Bilingual experience** — switch between Indonesian and English.
+- **Appearance settings** — personalize the app's visual theme.
+- **Web and Android** — access DuniaTahu in a browser or install the Android app.
 
 ## Tech Stack
 
@@ -20,160 +43,116 @@ The project is built with React and Vite, uses Cloudflare for its backend infras
 | Frontend | React, Vite, JavaScript |
 | UI | Tailwind CSS, Radix UI, Lucide |
 | Mobile | Capacitor |
-| Hosting | Cloudflare Pages |
+| Web hosting | Cloudflare Pages |
 | Backend API | Cloudflare Workers |
 | Database and daily-fact cache | Cloudflare D1 |
-| AI provider | Google Gemini API — Gemini 3.5 Flash-Lite |
+| AI | Google Gemini API — Gemini 3.5 Flash-Lite |
 | Android automation | GitHub Actions, Gradle |
 
 ## Architecture
 
 ```text
-                   ┌──────────────────────┐
-                   │   DuniaTahu Client   │
-                   │   React + Vite       │
-                   │   Web / Android      │
-                   └──────────┬───────────┘
-                              │ HTTPS
-                              ▼
-                   ┌──────────────────────┐
-                   │  Cloudflare Worker  │
-                   │    duniatahu-api     │
-                   └───────┬────────┬─────┘
-                           │        │
-                 AI request│        │Daily fact data
-                           ▼        ▼
-                 ┌─────────────┐  ┌─────────────┐
-                 │ Google      │  │ Cloudflare  │
-                 │ Gemini API │  │ D1 Database │
-                 └─────────────┘  └─────────────┘
-
-        Web frontend hosting: Cloudflare Pages
-        Android build pipeline: GitHub Actions
+Web / Android
+     |
+     v
+React + Vite (Cloudflare Pages)
+     | HTTPS
+     v
+Cloudflare Worker (duniatahu-api)
+     |------------------|
+     v                  v
+Google Gemini       Cloudflare D1
 ```
 
-### Backend endpoints
+## API
 
-The Cloudflare Worker exposes the following endpoints:
-
-| Method | Endpoint | Purpose |
+| Method | Endpoint | Description |
 | --- | --- | --- |
-| POST | `/api/askWorld` | Generate an answer to a user's question |
-| POST | `/api/dailyFact` | Retrieve or generate the daily fact |
-| GET | `/api/version` | Check the latest Android release |
+| POST | /api/askWorld | Generate an answer to a question |
+| POST | /api/dailyFact | Retrieve or generate the daily fact |
+| GET | /api/version | Check the latest Android app version |
 
-The Daily Fact service stores facts in Cloudflare D1 by date and language, allowing the generated fact to be reused instead of regenerated for every request.
+Daily facts are cached in D1 by date and language to avoid unnecessary regeneration.
+
+## Try the App
+
+- **Web:** https://duniatahu.pages.dev
+- **Android:** https://github.com/kdrryan/DuniaTahu/releases
 
 ## Run Locally
 
-### Prerequisites
-
-- Node.js 22 or a compatible recent Node.js version
-- npm
-- Git
-
-### 1. Clone the repository
+Requirements: Node.js 22 (or a compatible recent version), npm, and Git.
 
 ```bash
 git clone https://github.com/kdrryan/DuniaTahu.git
 cd DuniaTahu
-```
-
-### 2. Install dependencies
-
-```bash
 npm ci
 ```
 
-### 3. Configure the API URL
-
-Create a `.env.local` file in the project root:
+Create a .env.local file in the project root:
 
 ```env
 VITE_API_BASE_URL=https://duniatahu-api.christainmichael22.workers.dev
 ```
 
-The API URL can be changed to point to another compatible backend environment.
-
-### 4. Start the development server
+Start the development server and build the frontend:
 
 ```bash
-npm run dev -- --host 0.0.0.0
-```
-
-Open the local URL printed by Vite, usually `http://localhost:5173`.
-
-### 5. Create a production web build
-
-```bash
+npm run dev
 npm run build
 ```
 
-The production files are generated in the `dist/` directory.
+## Backend Configuration
 
-## Cloudflare Backend
+The Cloudflare Worker source is in workers/worker.js; its configuration is in wrangler.toml.
 
-The backend source code is in `workers/worker.js`, and its Cloudflare configuration is in `wrangler.toml`.
+- Configure the Gemini key as the Worker secret GEMINI_API_KEY.
+- The D1 database is connected through the DB binding.
+- Never commit API keys, credentials, signing files, or other secrets. Use Cloudflare Worker secrets and GitHub Actions secrets.
 
-The Worker uses:
+## Android Build and Release
 
-- **Gemini API:** configured through the `GEMINI_API_KEY` Worker secret.
-- **D1:** configured through the `DB` binding in `wrangler.toml`.
+The Capacitor Android project is built by .github/workflows/build-android.yml.
 
-Never commit API keys, credentials, signing files, or other secrets to the repository. Configure sensitive values through Cloudflare Worker secrets and GitHub Actions secrets.
+To build an APK artifact, open **Actions** → **Build DuniaTahu APK** → **Run workflow** on main, and leave release_tag empty. Download the APK from the completed workflow run's artifacts.
 
-## Android Build
+To publish a GitHub Release, provide a version tag such as v1.2.3 in release_tag. The workflow attaches the APK to that release.
 
-DuniaTahu uses Capacitor to package the web application as an Android app. The Capacitor configuration is in `capacitor.config.ts`.
-
-A GitHub Actions workflow builds the signed release APK:
-
-1. Open the repository's **Actions** tab.
-2. Select **Build DuniaTahu APK**.
-3. Select **Run workflow** on the `main` branch.
-4. Leave `release_tag` empty to build an APK artifact only.
-5. Download the generated APK from the completed workflow run's artifacts.
-
-To publish an Android release, run the workflow with a version tag such as `v1.2.3`. The workflow creates a GitHub Release and attaches the APK.
-
-The Android signing keystore and passwords are supplied through GitHub Actions secrets. The permanent signing key must be preserved for future updates.
+The Android signing keystore and passwords are provided through GitHub Actions secrets. Preserve the permanent signing key for future updates.
 
 ## Project Structure
 
 ```text
 DuniaTahu/
-├── .github/
-│   └── workflows/
-│       └── build-android.yml
+├── .github/workflows/       # GitHub Actions workflows
 ├── android/                 # Capacitor Android project
 ├── public/                  # Static assets
 ├── src/                     # React application
-├── workers/
-│   └── worker.js            # Cloudflare Workers API
-├── capacitor.config.ts      # Capacitor configuration
+├── workers/worker.js        # Cloudflare Workers API
+├── capacitor.config.ts
 ├── package.json
-├── wrangler.toml            # Cloudflare Worker and D1 config
+├── wrangler.toml
 └── vite.config.js
 ```
 
-## Available Scripts
+## Useful Commands
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite development server |
-| `npm run build` | Build the production frontend |
-| `npm run preview` | Preview the production build locally |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript checks |
+| npm run dev | Start the Vite development server |
+| npm run build | Build the production frontend |
+| npm run preview | Preview the production build |
+| npm run lint | Run ESLint |
+| npm run typecheck | Run TypeScript checks |
 
-## Deployment Overview
+## Deployment
 
-- **Frontend:** deployed to Cloudflare Pages.
-- **Backend:** deployed as the `duniatahu-api` Cloudflare Worker.
-- **Android:** built and distributed through GitHub Actions and GitHub Releases.
+- **Frontend:** Cloudflare Pages
+- **Backend:** Cloudflare Worker duniatahu-api
+- **Android:** GitHub Actions and GitHub Releases
 
-Frontend and backend deployments are independent. Changes limited to the Cloudflare Worker do not require a new Android APK.
+Frontend, backend, and Android delivery are independent. Worker-only changes do not require a new Android APK.
 
 ---
 
-Made with curiosity by [@kdrryan](https://github.com/kdrryan).
+<p align="center">Made with curiosity by <a href="https://github.com/kdrryan">@kdrryan</a>.</p>
