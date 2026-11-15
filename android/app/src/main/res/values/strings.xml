@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">DuniaTahu</string>
-    <string name="title_activity_main">DuniaTahu</string>
+    <string name="app_name">Ratio</string>
+    <string name="title_activity_main">Ratio</string>
     <string name="package_name">com.kdrryan.duniatahu</string>
     <string name="custom_url_scheme">com.kdrryan.duniatahu</string>
 </resources>
