@@ -64,7 +64,7 @@ export async function checkForUpdate() {
     return {
       currentVersion: appInfo.version,
       latestVersion: latest.version,
-      releaseName: latest.name || 'DuniaTahu Update',
+      releaseName: latest.name || 'Ratio Update',
       notes: latest.notes || '',
       apkUrl: latest.apk_url,
     };
