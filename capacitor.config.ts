@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.kdrryan.duniatahu',
-  appName: 'DuniaTahu',
+  appName: 'Ratio',
   webDir: 'dist'
 };
 
