@@ -1,6 +1,6 @@
 
 
-const MODEL = "gemini-3.8-flash";
+const MODEL = "gemini-3.5-flash-lite";
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
 const GITHUB_RELEASE_URL =
