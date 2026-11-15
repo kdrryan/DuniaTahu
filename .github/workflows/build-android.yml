@@ -43,6 +43,16 @@ jobs:
         env:
           VITE_API_BASE_URL: https://duniatahu-api.christainmichael22.workers.dev
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate Android launcher PNGs from official logo
+        run: |
+          python -m pip install --disable-pip-version-check Pillow
+          python scripts/generate-android-icons.py
+
       - name: Sync Capacitor
         run: npx cap sync android
 
