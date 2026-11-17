@@ -1,10 +1,6 @@
-name: Build DuniaTahu APK
+name: Build Ratio APK
 
 on:
-  push:
-    branches:
-      - main
-
   workflow_dispatch:
     inputs:
       release_tag:
@@ -47,6 +43,16 @@ jobs:
         env:
           VITE_API_BASE_URL: https://duniatahu-api.christainmichael22.workers.dev
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate Android launcher PNGs from official logo
+        run: |
+          python -m pip install --disable-pip-version-check Pillow
+          python scripts/generate-android-icons.py
+
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -70,7 +76,7 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DuniaTahu-APK
+          name: Ratio-APK
           path: android/app/build/outputs/apk/release/app-release.apk
 
       - name: Create GitHub Release and upload APK
@@ -78,8 +84,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
-          name: DuniaTahu ${{ inputs.release_tag }}
-          body: "DuniaTahu Android release."
+          name: Ratio ${{ inputs.release_tag }}
+          body: "Ratio Android release."
           files: android/app/build/outputs/apk/release/app-release.apk
           overwrite_files: true
           fail_on_unmatched_files: true
