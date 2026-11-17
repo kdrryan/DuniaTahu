@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS articles (
   article_id TEXT PRIMARY KEY,
   category_code TEXT NOT NULL REFERENCES categories(code),
   category_sequence INTEGER NOT NULL CHECK (category_sequence >= 1),
-  special_number INTEGER NOT NULL DEFAULT 0 CHECK (special_number >= 0),
+  special_number INTEGER NOT NULL DEFAULT 0 CHECK (special_number BETWEEN 0 AND 99),
   slug TEXT NOT NULL UNIQUE,
   language TEXT NOT NULL CHECK (language IN ('id', 'en')),
   title TEXT NOT NULL,
