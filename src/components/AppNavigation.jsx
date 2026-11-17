@@ -6,17 +6,17 @@ function RatioMark() {
   return (
     <>
       <img
-        src="/brand/ratio-orbit-black-white-dot-transparent.png"
+        src="/brand/ratio-orbit-black-black-dot-white-background.png"
         alt=""
         aria-hidden="true"
-        className="block h-6 w-6 shrink-0 object-contain dark:hidden"
+        className="block h-6 w-6 shrink-0 rounded-md object-contain dark:hidden"
         draggable="false"
       />
       <img
-        src="/brand/ratio-orbit-white-black-dot-transparent.png"
+        src="/brand/ratio-orbit-white-white-dot-black-background.png"
         alt=""
         aria-hidden="true"
-        className="hidden h-6 w-6 shrink-0 object-contain dark:block"
+        className="hidden h-6 w-6 shrink-0 rounded-md object-contain dark:block"
         draggable="false"
       />
     </>
