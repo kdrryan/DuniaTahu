@@ -46,7 +46,7 @@ export default function FunFactCard({ fact, loading, onExplain }) {
           <h1 className="mt-6 max-w-2xl font-display text-fluid-hero text-foreground text-balance">
             {fact?.fact}
           </h1>
-          <p className="mt-3 max-w-2xl text-[14px] leading-[1.8] text-muted-foreground sm:text-[15px]">
+          <p className="mt-3 max-w-2xl text-[13px] leading-[1.75] text-muted-foreground sm:text-[14px]">
             {fact?.detail}
           </p>
           <div className="mt-6">
