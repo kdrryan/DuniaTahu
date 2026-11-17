@@ -10,18 +10,14 @@ import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
 import AppNavigation from './components/AppNavigation';
 import Home from './pages/Home';
+import Ratio from './pages/Ratio';
 import Explore from './pages/Explore';
 import Saved from './pages/Saved';
 import { checkForUpdate } from '@/lib/appUpdater';
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
@@ -34,17 +30,11 @@ function App() {
     let active = true;
     let checking = false;
     let appStateListener = null;
-
     const checkUpdate = async () => {
-      if (checking || updateDialogOpenRef.current) {
-        return;
-      }
-
+      if (checking || updateDialogOpenRef.current) return;
       checking = true;
-
       try {
         const update = await checkForUpdate();
-
         if (active && update) {
           updateDialogOpenRef.current = true;
           setUpdateInfo(update);
@@ -53,25 +43,13 @@ function App() {
         checking = false;
       }
     };
-
-    // Check immediately when the app starts.
     checkUpdate();
-
-    // Check again whenever the app returns to the foreground.
     CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) {
-        checkUpdate();
-      }
+      if (isActive) checkUpdate();
     }).then((listener) => {
-      if (active) {
-        appStateListener = listener;
-      } else {
-        listener.remove();
-      }
-    }).catch((error) => {
-      console.error('Pemeriksaan status aplikasi gagal:', error);
-    });
-
+      if (active) appStateListener = listener;
+      else listener.remove();
+    }).catch((error) => console.error('Pemeriksaan status aplikasi gagal:', error));
     return () => {
       active = false;
       appStateListener?.remove();
@@ -82,23 +60,21 @@ function App() {
     <QueryClientProvider client={queryClientInstance}>
       <Router>
         <ScrollToTop />
-
         <LanguageProvider>
           <AppNavigation
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}
           />
-
           <div className={sidebarCollapsed ? 'md:pl-14' : 'md:pl-[232px]'}>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/ratio" element={<Ratio />} />
               <Route path="/explore" element={<Explore />} />
               <Route path="/saved" element={<Saved />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </div>
         </LanguageProvider>
-
         <AlertDialog
           open={Boolean(updateInfo)}
           onOpenChange={(open) => {
@@ -110,33 +86,21 @@ function App() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                Ratio Update Available!
-              </AlertDialogTitle>
-
+              <AlertDialogTitle>Ratio Update Available!</AlertDialogTitle>
               <AlertDialogDescription>
                 A new version ({updateInfo?.latestVersion}) is available.
               </AlertDialogDescription>
             </AlertDialogHeader>
-
             <AlertDialogFooter>
-              <AlertDialogCancel>
-                Later
-              </AlertDialogCancel>
-
-              <AlertDialogAction
-                onClick={() => {
-                  if (updateInfo?.apkUrl) {
-                    Browser.open({ url: updateInfo.apkUrl });
-                  }
-                }}
-              >
+              <AlertDialogCancel>Later</AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                if (updateInfo?.apkUrl) Browser.open({ url: updateInfo.apkUrl });
+              }}>
                 Update Now
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
         <Toaster />
       </Router>
     </QueryClientProvider>
