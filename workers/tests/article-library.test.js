@@ -94,5 +94,5 @@ test('rejects Markdown image embeds and image blocks without license metadata', 
     ],
   });
   assert.equal(unlicensedBlock.valid, false);
-  assert.ok(unlicensedBlock.errors.some((error) => error.includes('license metadata')));
+  assert.ok(unlicensedBlock.errors.some((error) => error.includes('alt is required')));
 });
