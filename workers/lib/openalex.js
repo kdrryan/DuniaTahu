@@ -65,16 +65,36 @@ export async function searchOpenAlexWorks(query, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), OPENALEX_TIMEOUT_MS);
 
   try {
-    const upstream = await fetch(url, {
-      headers: { Accept: 'application/json' },
-      signal: controller.signal,
-    });
-
-    if (!upstream.ok) {
-      throw new Error(`OpenAlex returned HTTP ${upstream.status}.`);
+    let upstream;
+    try {
+      upstream = await fetch(url, {
+        headers: { Accept: 'application/json' },
+        signal: controller.signal,
+      });
+    } catch (error) {
+      error.upstreamStage = 'fetch';
+      throw error;
     }
 
-    const payload = await upstream.json();
+    if (!upstream.ok) {
+      const upstreamBody = (await upstream.text()).slice(0, 500);
+      const error = new Error(`OpenAlex returned HTTP ${upstream.status}.`);
+      error.upstreamStatus = upstream.status;
+      error.upstreamStatusText = upstream.statusText;
+      error.upstreamBody = upstreamBody;
+      error.upstreamStage = 'http';
+      throw error;
+    }
+
+    let payload;
+    try {
+      payload = await upstream.json();
+    } catch (error) {
+      error.upstreamStage = 'json';
+      error.upstreamStatus = upstream.status;
+      throw error;
+    }
+
     const results = Array.isArray(payload.results)
       ? payload.results.map(normalizeOpenAlexWork).filter((item) => item?.title)
       : [];
