@@ -1,4 +1,5 @@
 import { formatArticleId } from './lib/article-id.js';
+import { searchOpenAlexWorks } from './lib/openalex.js';
 import { validateArticleDraft } from './lib/article-validation.js';
 
 const corsHeaders = {
@@ -273,6 +274,51 @@ async function createArticleDraft(request, env) {
   return response({ articleId, status: 'draft' }, 201);
 }
 
+
+async function searchOpenAlex(request, env) {
+  if (!env.ARTICLE_ADMIN_TOKEN) {
+    return response({ error: 'Article management is not configured.' }, 503);
+  }
+
+  const authorization = request.headers.get('Authorization') || '';
+  const providedToken = authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : '';
+  if (!(await tokenMatches(providedToken, env.ARTICLE_ADMIN_TOKEN))) {
+    return response({ error: 'Unauthorized.' }, 401);
+  }
+
+  const url = new URL(request.url);
+  const query = (url.searchParams.get('q') || '').trim().slice(0, 200);
+  if (query.length < 3) {
+    return response({ error: 'Search query must contain at least 3 characters.' }, 400);
+  }
+
+  const requestedLimit = Number.parseInt(url.searchParams.get('limit') || '10', 10);
+  const limit = Number.isFinite(requestedLimit)
+    ? Math.min(10, Math.max(1, requestedLimit))
+    : 10;
+
+  try {
+    const result = await searchOpenAlexWorks(query, {
+      apiKey: env.OPENALEX_API_KEY,
+      limit,
+    });
+    return response({
+      source: 'openalex',
+      query,
+      total: result.total,
+      results: result.results,
+    });
+  } catch (error) {
+    console.error('OpenAlex search failed.', {
+      name: error?.name || 'Error',
+      message: error?.message || 'Unknown error',
+    });
+    return response({ error: 'OpenAlex search is temporarily unavailable.' }, 502);
+  }
+}
+
 export async function handleArticleLibraryRequest(request, env) {
   const url = new URL(request.url);
 
@@ -287,6 +333,10 @@ export async function handleArticleLibraryRequest(request, env) {
 
   if (url.pathname === '/api/admin/articles' && request.method === 'POST') {
     return createArticleDraft(request, env);
+  }
+
+  if (url.pathname === '/api/admin/sources/openalex/search' && request.method === 'GET') {
+    return searchOpenAlex(request, env);
   }
 
   return null;
