@@ -3,8 +3,6 @@
 -- Apply to a dedicated preview D1 database first. Never apply to production
 -- until the migration has been reviewed and explicitly approved.
 
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS categories (
   code TEXT PRIMARY KEY CHECK (length(code) = 1 AND code GLOB '[A-Z]'),
   name TEXT NOT NULL,
