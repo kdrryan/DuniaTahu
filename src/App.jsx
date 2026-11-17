@@ -8,7 +8,10 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
+import AppNavigation from './components/AppNavigation';
 import Home from './pages/Home';
+import Explore from './pages/Explore';
+import Saved from './pages/Saved';
 import { checkForUpdate } from '@/lib/appUpdater';
 
 import {
@@ -80,10 +83,16 @@ function App() {
         <ScrollToTop />
 
         <LanguageProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="*" element={<PageNotFound />} />
-          </Routes>
+          <AppNavigation />
+
+          <div className="lg:pl-[232px]">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/saved" element={<Saved />} />
+              <Route path="*" element={<PageNotFound />} />
+            </Routes>
+          </div>
         </LanguageProvider>
 
         <AlertDialog

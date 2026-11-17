@@ -15,6 +15,21 @@ const STRINGS = {
     'header.tagline': 'Understand more.',
     'header.cta': 'Tanya Ratio',
 
+    'navigation.main': 'Navigasi utama',
+    'navigation.home': 'Beranda',
+    'navigation.ratio': 'Ratio',
+    'navigation.explore': 'Jelajahi',
+    'navigation.saved': 'Tersimpan',
+
+    'explore.title': 'Jelajahi pengetahuan',
+    'explore.subtitle': 'Temukan ide, penemuan, dan hubungan tak terduga dari berbagai bidang.',
+    'explore.empty.title': 'Dunia pengetahuan menantimu',
+    'explore.empty.description': 'Ruang Explore sedang disiapkan untuk membantumu menemukan hal-hal menarik.',
+    'saved.title': 'Pengetahuan tersimpan',
+    'saved.subtitle': 'Kumpulkan penemuan yang ingin kamu baca kembali.',
+    'saved.empty.title': 'Belum ada yang disimpan',
+    'saved.empty.description': 'Pengetahuan yang kamu simpan nantinya akan muncul di sini.',
+
     'fact.label': 'Ratio Daily',
     'fact.loading': 'Menyiapkan fakta hari ini…',
     'fact.explain': 'Ceritakan lebih dalam',
@@ -67,6 +82,21 @@ const STRINGS = {
   en: {
     'header.tagline': 'Understand more.',
     'header.cta': 'Ask Ratio',
+
+    'navigation.main': 'Main navigation',
+    'navigation.home': 'Home',
+    'navigation.ratio': 'Ratio',
+    'navigation.explore': 'Explore',
+    'navigation.saved': 'Saved',
+
+    'explore.title': 'Explore knowledge',
+    'explore.subtitle': 'Discover ideas, discoveries, and unexpected connections across different fields.',
+    'explore.empty.title': 'A world of knowledge awaits',
+    'explore.empty.description': 'The Explore space is being prepared to help you discover fascinating things.',
+    'saved.title': 'Saved knowledge',
+    'saved.subtitle': 'Collect discoveries you want to revisit.',
+    'saved.empty.title': 'Nothing saved yet',
+    'saved.empty.description': 'The knowledge you save will appear here.',
 
     'fact.label': 'Ratio Daily',
     'fact.loading': 'Preparing today’s fact…',

@@ -89,7 +89,7 @@ export default function Home() {
         <div className="absolute -top-48 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-500/[0.055] blur-3xl dark:bg-blue-400/[0.07]" />
       </div>
 
-      <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-5 sm:px-7 sm:pt-8 lg:px-8">
+      <div className="mx-auto w-full max-w-3xl px-4 pb-28 pt-5 sm:px-7 sm:pb-16 sm:pt-8 lg:px-8">
         <BrandHeader />
 
         <main className="mt-7 space-y-5 sm:mt-9 sm:space-y-6">
