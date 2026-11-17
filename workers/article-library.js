@@ -274,7 +274,6 @@ async function createArticleDraft(request, env) {
   return response({ articleId, status: 'draft' }, 201);
 }
 
-
 async function searchOpenAlex(request, env) {
   if (!env.ARTICLE_ADMIN_TOKEN) {
     return response({ error: 'Article management is not configured.' }, 503);
@@ -314,6 +313,11 @@ async function searchOpenAlex(request, env) {
     console.error('OpenAlex search failed.', {
       name: error?.name || 'Error',
       message: error?.message || 'Unknown error',
+      stage: error?.upstreamStage || 'unknown',
+      status: error?.upstreamStatus || null,
+      statusText: error?.upstreamStatusText || null,
+      code: error?.code || null,
+      upstreamBody: error?.upstreamBody || null,
     });
     return response({ error: 'OpenAlex search is temporarily unavailable.' }, 502);
   }
