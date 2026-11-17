@@ -96,3 +96,42 @@ test('rejects Markdown image embeds and image blocks without license metadata', 
   assert.equal(unlicensedBlock.valid, false);
   assert.ok(unlicensedBlock.errors.some((error) => error.includes('alt is required')));
 });
+
+
+test('normalizes OpenAlex work metadata without treating metadata as article text', async () => {
+  const { normalizeOpenAlexWork } = await import('../lib/openalex.js');
+  const normalized = normalizeOpenAlexWork({
+    id: 'https://openalex.org/W123',
+    title: 'A study of atmospheric scattering',
+    publication_year: 2024,
+    type: 'article',
+    doi: 'https://doi.org/10.1234/example',
+    authorships: [
+      { author: { display_name: 'A. Researcher' } },
+      { author: { display_name: 'B. Scientist' } },
+    ],
+    cited_by_count: 12,
+    primary_location: {
+      landing_page_url: 'https://example.org/paper',
+      pdf_url: null,
+      source: { display_name: 'Example Journal' },
+    },
+    open_access: { is_oa: true, oa_status: 'gold', license: 'cc-by' },
+  });
+
+  assert.equal(normalized.openAlexId, 'https://openalex.org/W123');
+  assert.equal(normalized.title, 'A study of atmospheric scattering');
+  assert.deepEqual(normalized.authors, ['A. Researcher', 'B. Scientist']);
+  assert.equal(normalized.doi, 'https://doi.org/10.1234/example');
+  assert.equal(normalized.isOpenAccess, true);
+  assert.equal(normalized.openAccessLicense, 'cc-by');
+  assert.equal('abstract' in normalized, false);
+});
+
+test('rejects OpenAlex search terms shorter than three characters', async () => {
+  const { searchOpenAlexWorks } = await import('../lib/openalex.js');
+  await assert.rejects(
+    () => searchOpenAlexWorks('ab'),
+    /at least 3 characters/
+  );
+});
