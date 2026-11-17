@@ -1,4 +1,4 @@
-import { Bookmark, Compass, House } from 'lucide-react';
+import { Bookmark, Compass, House, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -51,7 +51,7 @@ function NavigationItem({ id, to, label, Icon, active, mobile = false }) {
   );
 }
 
-export default function AppNavigation() {
+export default function AppNavigation({ sidebarCollapsed, onToggleSidebar }) {
   const { pathname, hash } = useLocation();
   const { t } = useLanguage();
 
@@ -72,16 +72,45 @@ export default function AppNavigation() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[232px] border-r border-border/75 bg-background md:flex">
-        <nav aria-label={t('navigation.main')} className="flex w-full flex-col gap-1 px-4 pt-8">
-          {destinations.map((item) => (
-            <NavigationItem
-              key={item.id}
-              {...item}
-              active={isActive(item.id)}
-            />
-          ))}
-        </nav>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 hidden border-r border-border/75 bg-background transition-[width] duration-200 md:flex ${sidebarCollapsed ? 'w-14' : 'w-[232px]'}`}
+      >
+        {sidebarCollapsed ? (
+          <div className="flex w-full justify-center pt-5">
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              aria-label="Open sidebar"
+              title="Open sidebar"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+            >
+              <PanelLeftOpen className="h-5 w-5" strokeWidth={1.8} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex w-full flex-col px-4 pt-5">
+            <div className="mb-3 flex h-10 items-center justify-end">
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+              >
+                <PanelLeftClose className="h-5 w-5" strokeWidth={1.8} />
+              </button>
+            </div>
+            <nav aria-label={t('navigation.main')} className="flex flex-col gap-1">
+              {destinations.map((item) => (
+                <NavigationItem
+                  key={item.id}
+                  {...item}
+                  active={isActive(item.id)}
+                />
+              ))}
+            </nav>
+          </div>
+        )}
       </aside>
 
       <nav
