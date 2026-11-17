@@ -1,3 +1,5 @@
+import { handleArticleLibraryRequest } from './article-library.js';
+
 
 
 const MODEL = "gemini-3.5-flash-lite";
@@ -404,6 +406,9 @@ export default {
     const url = new URL(request.url);
 
     try {
+      const articleResponse = await handleArticleLibraryRequest(request, env);
+      if (articleResponse) return articleResponse;
+
       // Version check: GET
       if (
         url.pathname === "/api/version" &&
