@@ -17,6 +17,9 @@ export function validateArticleDraft(input) {
   }
 
   const requiredText = ['title', 'summary', 'contentMarkdown', 'language'];
+  if (typeof input.categoryCode !== 'string' || !/^[A-Z]$/.test(input.categoryCode)) {
+    errors.push('categoryCode must be one uppercase letter.');
+  }
   for (const key of requiredText) {
     if (typeof input[key] !== 'string' || !input[key].trim()) {
       errors.push(`${key} is required.`);
