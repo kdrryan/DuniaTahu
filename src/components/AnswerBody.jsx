@@ -2,24 +2,24 @@ import ReactMarkdown from 'react-markdown';
 
 const components = {
   p: ({ children }) => (
-    <p className="mb-4 text-[14.5px] leading-[1.85] text-foreground/80 last:mb-0 sm:text-[15px]">{children}</p>
+    <p className="mb-4 text-[14px] leading-[1.8] text-foreground/80 last:mb-0 sm:text-[14px]">{children}</p>
   ),
   strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
   em: ({ children }) => <em className="italic text-foreground/85">{children}</em>,
   ul: ({ children }) => (
-    <ul className="mb-4 list-disc space-y-2 pl-6 text-[14.5px] leading-[1.8] text-foreground/80 last:mb-0 sm:text-[15px]">{children}</ul>
+    <ul className="mb-4 list-disc space-y-2 pl-6 text-[14px] leading-[1.75] text-foreground/80 last:mb-0 sm:text-[14px]">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="mb-4 list-decimal space-y-2 pl-6 text-[14.5px] leading-[1.8] text-foreground/80 last:mb-0 sm:text-[15px]">{children}</ol>
+    <ol className="mb-4 list-decimal space-y-2 pl-6 text-[14px] leading-[1.75] text-foreground/80 last:mb-0 sm:text-[14px]">{children}</ol>
   ),
   h2: ({ children }) => (
-    <h2 className="mb-2.5 mt-6 font-display text-[17px] font-bold leading-snug text-foreground first:mt-0 sm:text-[18px]">{children}</h2>
+    <h2 className="mb-2.5 mt-6 font-display text-[16px] font-bold leading-snug text-foreground first:mt-0 sm:text-[17px]">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="mb-2 mt-5 text-[15px] font-bold leading-snug text-foreground first:mt-0 sm:text-[16px]">{children}</h3>
+    <h3 className="mb-2 mt-5 text-[14px] font-bold leading-snug text-foreground first:mt-0 sm:text-[15px]">{children}</h3>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="mb-4 rounded-r-xl border-l-[3px] border-blue-500 bg-blue-500/[0.06] px-4 py-3 text-[14px] leading-[1.8] text-foreground/75">
+    <blockquote className="mb-4 rounded-r-xl border-l-[3px] border-blue-500 bg-blue-500/[0.06] px-4 py-3 text-[13px] leading-[1.75] text-foreground/75">
       {children}
     </blockquote>
   ),
