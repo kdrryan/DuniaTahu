@@ -27,30 +27,18 @@ export default function Home() {
         if (alive && data) setFact(data);
       })
       .catch((err) => {
-        if (alive) {
-          const allowedCodes = [
-            'network',
-            'timeout',
-            'service',
-            'request',
-            'invalid_response',
-            'empty_response',
-          ];
-
-    const code = allowedCodes.includes(err?.code)
-      ? err.code
-      : 'unknown';
-
-    setError(t(`error.${code}`));
-  }
-})
+        if (!alive) return;
+        const allowedCodes = ['network', 'timeout', 'service', 'request', 'invalid_response', 'empty_response'];
+        const code = allowedCodes.includes(err?.code) ? err.code : 'unknown';
+        setError(t(`error.${code}`));
+      })
       .finally(() => {
         if (alive) setFactLoading(false);
       });
     return () => {
       alive = false;
     };
-  }, [lang]);
+  }, [lang, t]);
 
   useEffect(() => {
     if (!current) return;
@@ -74,27 +62,15 @@ export default function Home() {
       setHistory(next);
       saveHistory(next);
       setCurrent(entry);
-      } catch (err) {
-  console.error('ASK ERROR:', err);
-
-  const allowedCodes = [
-    'network',
-    'timeout',
-    'service',
-    'request',
-    'invalid_response',
-    'empty_response',
-  ];
-
-  const code = allowedCodes.includes(err?.code)
-    ? err.code
-    : 'unknown';
-
-  setError(t(`error.${code}`));
-} finally {
-  setAsking(false);
-}
-};
+    } catch (err) {
+      console.error('ASK ERROR:', err);
+      const allowedCodes = ['network', 'timeout', 'service', 'request', 'invalid_response', 'empty_response'];
+      const code = allowedCodes.includes(err?.code) ? err.code : 'unknown';
+      setError(t(`error.${code}`));
+    } finally {
+      setAsking(false);
+    }
+  };
 
   const explainFact = (dailyFact) => {
     if (!dailyFact) return;
@@ -109,40 +85,44 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen">
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="animate-drift absolute -left-24 -top-32 h-72 w-72 rounded-full bg-[#93a7ff]/25 blur-3xl dark:bg-[#4d63ff]/14" />
-        <div className="animate-drift absolute -right-24 top-24 h-80 w-80 rounded-full bg-[#ffb69b]/22 blur-3xl dark:bg-[#ff7a52]/10" />
-        <div className="absolute -bottom-28 left-1/3 h-72 w-72 rounded-full bg-[#9becd4]/20 blur-3xl dark:bg-[#2ec39c]/10" />
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-48 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-500/[0.055] blur-3xl dark:bg-blue-400/[0.07]" />
       </div>
 
-      <div className="mx-auto w-full max-w-2xl px-3.5 pb-14 pt-5 sm:px-6 sm:pt-7">
+      <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-5 sm:px-7 sm:pt-8 lg:px-8">
         <BrandHeader />
 
-        <main className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4">
+        <main className="mt-7 space-y-5 sm:mt-9 sm:space-y-6">
           <FunFactCard fact={fact} loading={factLoading} onExplain={explainFact} />
 
-          <section id="tanya" className="glass scroll-mt-4 rounded-3xl p-3.5 sm:p-4">
+          <section id="tanya" className="glass scroll-mt-5 rounded-3xl p-4 sm:p-5">
+            <div className="mb-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                {t('header.cta')}
+              </p>
+            </div>
             <AskBox onAsk={ask} loading={asking} />
 
             {error && (
-              <p className="mt-3 flex items-center gap-2 rounded-2xl bg-destructive/10 px-3 py-2 text-[12px] font-medium text-destructive">
-                <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {error}
+              <p role="alert" className="mt-4 flex items-start gap-2 rounded-2xl bg-destructive/10 px-3.5 py-3 text-[13px] font-medium leading-relaxed text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
               </p>
             )}
           </section>
 
           {(asking || current) && (
-            <div id="jawaban" className="scroll-mt-4">
+            <div id="jawaban" className="scroll-mt-5">
               <AnswerCard entry={current} loading={asking} />
             </div>
           )}
 
           <HistoryList items={history} onClear={clearHistory} />
 
-          <p className="px-2 text-[11px] leading-relaxed text-muted-foreground">{t('home.notice')}</p>
+          <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">{t('home.notice')}</p>
         </main>
 
-        <footer className="mt-10 border-t border-foreground/8 pt-4 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <footer className="mt-12 border-t border-border/70 pt-5 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {t('home.footer')}
         </footer>
       </div>
