@@ -27,6 +27,7 @@ import {
 
 function App() {
   const [updateInfo, setUpdateInfo] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const updateDialogOpenRef = useRef(false);
 
   useEffect(() => {
@@ -83,9 +84,12 @@ function App() {
         <ScrollToTop />
 
         <LanguageProvider>
-          <AppNavigation />
+          <AppNavigation
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}
+          />
 
-          <div className="md:pl-[232px]">
+          <div className={sidebarCollapsed ? 'md:pl-14' : 'md:pl-[232px]'}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/explore" element={<Explore />} />
