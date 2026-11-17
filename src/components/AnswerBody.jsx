@@ -2,42 +2,37 @@ import ReactMarkdown from 'react-markdown';
 
 const components = {
   p: ({ children }) => (
-    <p className="mb-2.5 text-[13.5px] leading-[1.7] text-foreground/75 last:mb-0">{children}</p>
+    <p className="mb-4 text-[14px] leading-[1.8] text-foreground/80 last:mb-0 sm:text-[14px]">{children}</p>
   ),
-  strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-  em: ({ children }) => <em className="italic text-foreground/80">{children}</em>,
-  ul: ({ children }) => <ul className="mb-2.5 list-disc space-y-1.5 pl-5 text-[13.5px] text-foreground/75 last:mb-0">{children}</ul>,
+  strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+  em: ({ children }) => <em className="italic text-foreground/85">{children}</em>,
+  ul: ({ children }) => (
+    <ul className="mb-4 list-disc space-y-2 pl-6 text-[14px] leading-[1.75] text-foreground/80 last:mb-0 sm:text-[14px]">{children}</ul>
+  ),
   ol: ({ children }) => (
-    <ol className="mb-2.5 list-decimal space-y-1.5 pl-5 text-[13.5px] text-foreground/75 last:mb-0">
-      {children}
-    </ol>
+    <ol className="mb-4 list-decimal space-y-2 pl-6 text-[14px] leading-[1.75] text-foreground/80 last:mb-0 sm:text-[14px]">{children}</ol>
   ),
   h2: ({ children }) => (
-    <h2 className="mb-2 mt-4 text-[15px] font-bold text-foreground first:mt-0">{children}</h2>
+    <h2 className="mb-2.5 mt-6 font-display text-[16px] font-bold leading-snug text-foreground first:mt-0 sm:text-[17px]">{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="mb-1.5 mt-3 text-[13.5px] font-semibold text-foreground first:mt-0">{children}</h3>
+    <h3 className="mb-2 mt-5 text-[14px] font-bold leading-snug text-foreground first:mt-0 sm:text-[15px]">{children}</h3>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="mb-2.5 rounded-xl border-l-2 border-foreground/20 bg-foreground/4 px-3 py-2 text-[13px] italic text-foreground/70">
+    <blockquote className="mb-4 rounded-r-xl border-l-[3px] border-blue-500 bg-blue-500/[0.06] px-4 py-3 text-[13px] leading-[1.75] text-foreground/75">
       {children}
     </blockquote>
   ),
   code: ({ children }) => (
-    <code className="rounded bg-foreground/6 px-1 py-0.5 font-mono text-[12px] text-foreground/85">
-      {children}
-    </code>
+    <code className="rounded-md bg-foreground/6 px-1.5 py-0.5 font-mono text-[12px] text-foreground/90">{children}</code>
   ),
 };
 
 function normalizeMarkdown(value) {
   return String(value)
     .replace(/\r\n?/g, '\n')
-    // Recover headings that the model accidentally appends to a paragraph.
     .replace(/([^\n])\s+(#{1,3}\s+)/g, '$1\n\n$2')
-    // Convert inline decorative bullets into proper Markdown list items.
     .replace(/[ \t]+•[ \t]*/g, '\n- ')
-    // Repair malformed numbered items such as "- 1.Item" or "- 1. Item".
     .replace(/^\s*-\s+(\d+)\.\s*/gm, '$1. ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -47,7 +42,7 @@ export default function AnswerBody({ text }) {
   if (!text) return null;
 
   return (
-    <div>
+    <div className="break-words">
       <ReactMarkdown components={components}>{normalizeMarkdown(text)}</ReactMarkdown>
     </div>
   );
