@@ -77,3 +77,22 @@ test('rejects non-HTTPS image assets and missing license attribution', () => {
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.includes('HTTPS')));
 });
+
+test('rejects Markdown image embeds and image blocks without license metadata', () => {
+  const markdownImage = validateArticleDraft({
+    ...validDraft,
+    contentMarkdown: '![unverified](https://images.example.com/photo.jpg)',
+  });
+  assert.equal(markdownImage.valid, false);
+  assert.ok(markdownImage.errors.some((error) => error.includes('Markdown images')));
+
+  const unlicensedBlock = validateArticleDraft({
+    ...validDraft,
+    contentBlocks: [
+      ...validDraft.contentBlocks,
+      { type: 'image', image: { url: 'https://images.example.com/photo.jpg' } },
+    ],
+  });
+  assert.equal(unlicensedBlock.valid, false);
+  assert.ok(unlicensedBlock.errors.some((error) => error.includes('license metadata')));
+});
