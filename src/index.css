@@ -91,7 +91,7 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv11", "ss01";
-    font-size: 15px;
+    font-size: 14px;
   }
 
   ::selection {
@@ -109,12 +109,12 @@
   }
 
   .text-fluid-hero {
-    font-size: clamp(1.55rem, 4.2vw, 2.15rem);
+    font-size: clamp(1.4rem, 3.8vw, 1.9rem);
     line-height: 1.15;
   }
 
   .text-fluid-title {
-    font-size: clamp(1.1rem, 2.8vw, 1.35rem);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
     line-height: 1.3;
   }
 
