@@ -85,7 +85,7 @@ function App() {
         <LanguageProvider>
           <AppNavigation />
 
-          <div className="lg:pl-[232px]">
+          <div className="md:pl-[232px]">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/explore" element={<Explore />} />

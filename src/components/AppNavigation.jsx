@@ -72,7 +72,7 @@ export default function AppNavigation() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[232px] border-r border-border/75 bg-background lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[232px] border-r border-border/75 bg-background md:flex">
         <nav aria-label={t('navigation.main')} className="flex w-full flex-col gap-1 px-4 pt-8">
           {destinations.map((item) => (
             <NavigationItem
@@ -86,7 +86,7 @@ export default function AppNavigation() {
 
       <nav
         aria-label={t('navigation.main')}
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/85 md:hidden"
       >
         <div className="mx-auto grid h-14 max-w-md grid-cols-4 px-2">
           {destinations.map((item) => (
