@@ -39,7 +39,7 @@ export default function AnswerCard({ entry, loading }) {
       </div>
 
       <div className="px-5 py-5 sm:px-6 sm:py-6">
-        <p className="text-[13px] font-medium leading-relaxed text-muted-foreground">{entry.question}</p>
+        <p className="text-[12px] font-medium leading-relaxed text-muted-foreground">{entry.question}</p>
         {entry.title && (
           <h2 className="mt-2 font-display text-fluid-title text-foreground">{entry.title}</h2>
         )}
@@ -54,7 +54,7 @@ export default function AnswerCard({ entry, loading }) {
             </p>
             <ul className="mt-3 space-y-2.5">
               {entry.quick_facts.map((item, index) => (
-                <li key={index} className="flex gap-2.5 text-[14px] leading-[1.7] text-foreground/75">
+                <li key={index} className="flex gap-2.5 text-[13px] leading-[1.7] text-foreground/75">
                   <span className="font-semibold text-blue-500/80">{index + 1}.</span>
                   <span>{item}</span>
                 </li>
