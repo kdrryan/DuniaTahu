@@ -49,14 +49,14 @@ export default function AskBox({ onAsk, loading }) {
             maxLength={300}
             placeholder={t('ask.placeholder')}
             aria-label={t('ask.placeholder')}
-            className="min-h-[88px] w-full resize-y bg-transparent px-3 py-3 text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/80"
+            className="min-h-[88px] w-full resize-y bg-transparent px-3 py-3 text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/80"
           />
           <div className="flex items-center justify-between gap-3 px-2 pb-1">
             <span className="hidden text-[12px] text-muted-foreground sm:block">{t('ask.hint')}</span>
             <button
               type="submit"
               disabled={loading || !value.trim()}
-              className="ml-auto inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
+              className="ml-auto inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-35"
             >
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {t('ask.loading')}</>
