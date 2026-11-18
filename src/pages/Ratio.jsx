@@ -1,63 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BrandHeader from '@/components/BrandHeader';
-import FunFactCard from '@/components/FunFactCard';
 import AskBox from '@/components/AskBox';
 import AnswerCard from '@/components/AnswerCard';
 import HistoryList from '@/components/HistoryList';
-import { fetchDailyFact, askWorld } from '@/lib/api';
+import { askWorld } from '@/lib/api';
 import { loadHistory, saveHistory } from '@/lib/history';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function Ratio() {
   const { lang, t } = useLanguage();
-  const [fact, setFact] = useState(null);
-  const [factLoading, setFactLoading] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const handledInitialQuestion = useRef(null);
   const [history, setHistory] = useState(loadHistory);
   const [current, setCurrent] = useState(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let alive = true;
-    setFactLoading(true);
-    setFact(null);
-    fetchDailyFact(lang)
-      .then((data) => {
-        if (alive && data) setFact(data);
-      })
-      .catch((err) => {
-        if (alive) {
-          const allowedCodes = [
-            'network',
-            'timeout',
-            'service',
-            'request',
-            'invalid_response',
-            'empty_response',
-          ];
-
-    const code = allowedCodes.includes(err?.code)
-      ? err.code
-      : 'unknown';
-
-    setError(t(`error.${code}`));
-  }
-})
-      .finally(() => {
-        if (alive) setFactLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [lang]);
-
-  useEffect(() => {
     if (!current) return;
     document.getElementById('jawaban')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [current?.id]);
 
-  const ask = async (question) => {
+  const ask = useCallback(async (question) => {
     const trimmed = question?.trim();
     if (!trimmed || asking) return;
     setAsking(true);
@@ -74,32 +41,32 @@ export default function Ratio() {
       setHistory(next);
       saveHistory(next);
       setCurrent(entry);
-      } catch (err) {
-  console.error('ASK ERROR:', err);
+    } catch (err) {
+      console.error('ASK ERROR:', err);
+      const allowedCodes = [
+        'network',
+        'timeout',
+        'service',
+        'request',
+        'invalid_response',
+        'empty_response',
+      ];
+      const code = allowedCodes.includes(err?.code) ? err.code : 'unknown';
+      setError(t(`error.${code}`));
+    } finally {
+      setAsking(false);
+    }
+  }, [asking, history, lang, t]);
 
-  const allowedCodes = [
-    'network',
-    'timeout',
-    'service',
-    'request',
-    'invalid_response',
-    'empty_response',
-  ];
+  useEffect(() => {
+    const initialQuestion = location.state?.initialQuestion;
+    if (typeof initialQuestion !== 'string' || !initialQuestion.trim()) return;
+    if (handledInitialQuestion.current === location.key) return;
 
-  const code = allowedCodes.includes(err?.code)
-    ? err.code
-    : 'unknown';
-
-  setError(t(`error.${code}`));
-} finally {
-  setAsking(false);
-}
-};
-
-  const explainFact = (dailyFact) => {
-    if (!dailyFact) return;
-    ask(`${t('home.explain')} "${dailyFact.fact}"`);
-  };
+    handledInitialQuestion.current = location.key;
+    navigate(`${location.pathname}${location.hash}`, { replace: true, state: null });
+    ask(initialQuestion);
+  }, [ask, location.hash, location.key, location.pathname, location.state, navigate]);
 
   const clearHistory = () => {
     setHistory([]);
@@ -119,8 +86,6 @@ export default function Ratio() {
         <BrandHeader />
 
         <main className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4">
-          <FunFactCard fact={fact} loading={factLoading} onExplain={explainFact} />
-
           <section id="tanya" className="glass scroll-mt-4 rounded-3xl p-3.5 sm:p-4">
             <AskBox onAsk={ask} loading={asking} />
 
