@@ -94,6 +94,30 @@
     font-size: 15px;
   }
 
+  /* Disable accidental long-press text selection throughout the app. */
+  #root,
+  #root * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Keep text selection enabled only where the user explicitly needs it. */
+  #root input,
+  #root textarea,
+  #root [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  #root .reader-content,
+  #root .reader-content *,
+  #root .ratio-selectable-text,
+  #root .ratio-selectable-text * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+
   ::selection {
     background-color: hsl(var(--foreground) / 0.14);
     color: hsl(var(--foreground));
