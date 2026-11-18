@@ -238,7 +238,7 @@ export default function AnswerCard({ entry, loading }) {
 
             <div
               ref={textViewRef}
-              className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6"
+              className="ratio-selectable-text min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6"
               onMouseUp={captureSelection}
               onTouchEnd={() => window.setTimeout(captureSelection, 100)}
               onContextMenu={() => window.setTimeout(captureSelection, 100)}
