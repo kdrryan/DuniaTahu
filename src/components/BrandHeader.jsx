@@ -11,7 +11,7 @@ export default function BrandHeader() {
       <Link
         to="/"
         aria-label="Ratio home"
-        className="min-w-0 font-display text-[18px] font-bold tracking-[-0.06em] text-foreground"
+        className="min-w-0 font-display text-[24px] font-bold leading-none tracking-[-0.06em] text-foreground sm:text-[26px]"
       >
         ratio.
       </Link>
