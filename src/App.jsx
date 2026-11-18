@@ -60,6 +60,19 @@ function App() {
   const updateDialogOpenRef = useRef(false);
 
   useEffect(() => {
+    const suppressBrowserContextMenu = (event) => {
+      event.preventDefault();
+    };
+
+    // Suppress the browser's long-press/right-click menu across the whole app.
+    // Text selection remains available inside article content for Ratio's own toolbar.
+    document.addEventListener('contextmenu', suppressBrowserContextMenu, true);
+    return () => {
+      document.removeEventListener('contextmenu', suppressBrowserContextMenu, true);
+    };
+  }, []);
+
+  useEffect(() => {
     let active = true;
     let checking = false;
     let appStateListener = null;
