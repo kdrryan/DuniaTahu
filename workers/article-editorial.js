@@ -1,3 +1,4 @@
+import { formatArticleId } from './lib/article-id.js';
 const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const PROMPT_VERSION = 'ratio-editorial-v1';
@@ -53,7 +54,8 @@ export function validateEditorialOutput(value, evidenceClaims) {
       if (!section || !Array.isArray(section.paragraphs) || section.paragraphs.length < 1 ||
           section.paragraphs.length > 3 ||
           section.paragraphs.some((paragraph) => typeof paragraph !== 'string' ||
-            paragraph.trim().length < 40 || paragraph.length > 1800)) {
+            paragraph.trim().length < 40 || paragraph.length > 1800 ||
+            /!\\[[^\\]]*\\]\\([^)]*\\)|<img\\b/i.test(paragraph))) {
         errors.push('sections[' + index + '].paragraphs must contain 1 to 3 substantive paragraphs.');
       }
     });
@@ -300,7 +302,7 @@ async function runEditorialDraft(request, env) {
   if (!allocation) return response({ error: 'An article ID could not be allocated.' }, 409);
 
   const sequence = allocation.category_sequence;
-  const articleId = String(categoryCode) + String(sequence).padStart(3, '0') + '-00';
+  const articleId = formatArticleId(categoryCode, sequence, 0);
   const readingTimeMinutes = Math.max(1, Math.ceil(countWords(contentMarkdown) / 200));
   const snapshot = {
     articleId, categoryCode, categorySequence: sequence, specialNumber: 0,
