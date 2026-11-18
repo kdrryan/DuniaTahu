@@ -117,6 +117,27 @@ export function retainEvidenceBackedClaims(value, fullText) {
   return { claims, rejectedCount: value.keyClaims.length - claims.length };
 }
 
+export function downgradeUnverifiedPass(value, language = 'en') {
+  if (!value || value.qualityDecision !== 'pass' ||
+      (Array.isArray(value.keyClaims) && value.keyClaims.length > 0)) return value;
+  const next = {
+    ...value,
+    qualityDecision: 'needs_revision',
+    editorialReadiness: false,
+    qualityFlags: Array.isArray(value.qualityFlags) ? [...value.qualityFlags] : [],
+    recommendations: Array.isArray(value.recommendations) ? [...value.recommendations] : [],
+  };
+  const flag = language === 'en'
+    ? 'The model proposed a pass, but no key claim had a verifiable evidence excerpt in the full text. Manual evidence review is required.'
+    : 'Model mengusulkan lolos, tetapi tidak ada klaim utama dengan kutipan bukti yang dapat diverifikasi pada teks lengkap. Pemeriksaan bukti secara manual diperlukan.';
+  if (!next.qualityFlags.includes(flag)) next.qualityFlags.push(flag);
+  const recommendation = language === 'en'
+    ? 'Re-check the article evidence and provide at least one exact, verifiable excerpt before reconsidering this review.'
+    : 'Periksa kembali bukti artikel dan sertakan setidaknya satu kutipan persis yang dapat diverifikasi sebelum meninjau ulang hasil ini.';
+  if (!next.recommendations.includes(recommendation)) next.recommendations.push(recommendation);
+  return next;
+}
+
 export function validateQualityOutput(value, fullText = '') {
   const errors = [];
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -318,6 +339,7 @@ async function runFullTextReview(request, env) {
   const evidence = retainEvidenceBackedClaims(quality, fullText.text);
   quality.keyClaims = evidence.claims;
   quality.rejectedUnsupportedClaimCount = evidence.rejectedCount;
+  quality = downgradeUnverifiedPass(quality, researchRow.language);
   const validation = validateQualityOutput(quality, fullText.text);
   if (!validation.valid) {
     console.error('Full-text quality output failed validation.', { errors: validation.errors });
