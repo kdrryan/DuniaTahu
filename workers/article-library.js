@@ -293,7 +293,7 @@ async function normalizePublishedArticleCitations(request, env) {
 
   const input = await request.json().catch(() => null);
   const articleId = input?.articleId;
-  if (typeof articleId !== 'string' || !/^[A-Z]\\d{3,}-\\d{2}$/.test(articleId)) {
+  if (typeof articleId !== 'string' || !/^[A-Z]\d{3,}-\d{2}$/.test(articleId)) {
     return response({ error: 'A valid article ID is required.' }, 400);
   }
 
@@ -320,7 +320,7 @@ async function normalizePublishedArticleCitations(request, env) {
   }
 
   const readingTimeMinutes = Math.max(1,
-    Math.ceil(contentMarkdown.trim().split(/\\s+/).filter(Boolean).length / 200));
+    Math.ceil(contentMarkdown.trim().split(/\s+/).filter(Boolean).length / 200));
   const snapshot = {
     articleId: row.article_id,
     categoryCode: row.category_code,
