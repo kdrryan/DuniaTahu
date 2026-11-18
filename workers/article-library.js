@@ -4,6 +4,7 @@ import { handleOpenAlexCandidateRequest } from './openalex-candidates.js';
 import { handleArticleResearchRequest } from './article-research.js';
 import { handleArticleFullTextRequest } from './article-fulltext.js';
 import { validateArticleDraft } from './lib/article-validation.js';
+import { handleEditorialDraftRequest } from './article-editorial.js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -332,6 +333,9 @@ export async function handleArticleLibraryRequest(request, env) {
 
   const fullTextResponse = await handleArticleFullTextRequest(request, env);
   if (fullTextResponse) return fullTextResponse;
+
+  const editorialResponse = await handleEditorialDraftRequest(request, env);
+  if (editorialResponse) return editorialResponse;
 
   const candidateResponse = await handleOpenAlexCandidateRequest(request, env);
   if (candidateResponse) return candidateResponse;
