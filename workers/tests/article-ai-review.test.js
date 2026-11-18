@@ -91,6 +91,6 @@ test('requires valid reviewer decisions and check statuses', () => {
   const review = passingReview();
   review.decision = 'approved';
   review.checks.factualAccuracy = 'unknown';
-  const result = validateAutomatedReview(review, 2, source);
+  const result = validateAutomatedReview(review, 2, evidence);
   assert.equal(result.valid, false);
 });
