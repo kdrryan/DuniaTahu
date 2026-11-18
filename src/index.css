@@ -163,6 +163,7 @@
   }
 
   .dark .glass {
+    border-width: 0.75px;
     background-color: hsl(var(--card) / 0.42);
     background-image: linear-gradient(
       135deg,
@@ -185,6 +186,7 @@
   }
 
   .dark .glass-soft {
+    border-width: 0.75px;
     background-color: hsl(0 0% 100% / 0.04);
     border-color: hsl(0 0% 100% / 0.03);
     box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.02);
