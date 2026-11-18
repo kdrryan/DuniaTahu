@@ -87,7 +87,7 @@ export default function Ratio() {
       <div className="mx-auto w-full max-w-2xl px-3.5 pb-14 pt-5 sm:px-6 sm:pt-7">
         <BrandHeader />
 
-        <RatioMascot isTyping={isTyping} />
+        <RatioMascot isTyping={isTyping} isThinking={asking} />
 
         <main className="mt-1 space-y-3.5 sm:mt-2 sm:space-y-4">
           <section id="tanya" className="glass scroll-mt-4 rounded-3xl p-3.5 sm:p-4">
