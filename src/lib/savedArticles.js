@@ -16,9 +16,17 @@ export function isArticleSaved(articleId) {
 export function toggleSavedArticle(article) {
   const current = getSavedArticles();
   const exists = current.some((item) => item.id === article.id);
+  const savedArticle = {
+    id: article.id,
+    title: article.title,
+    summary: article.summary || '',
+    readingTimeMinutes: article.readingTimeMinutes || 1,
+    publishedAt: article.publishedAt || null,
+    savedAt: new Date().toISOString(),
+  };
   const next = exists
     ? current.filter((item) => item.id !== article.id)
-    : [{ ...article, savedAt: new Date().toISOString() }, ...current];
+    : [savedArticle, ...current];
 
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
