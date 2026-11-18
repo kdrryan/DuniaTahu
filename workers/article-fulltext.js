@@ -60,8 +60,8 @@ export function extractLicensedFullText(xml) {
   const licenseUrl = hrefMatch?.[1] || '';
   const licenseText = stripXml(licenseMatch[2]);
   const isCcBy40 = licenseUrl
-    ? /^https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/?$/i.test(licenseUrl)
-    : /creative commons attribution license \(cc by 4\.0\)/i.test(licenseText);
+    ? /^https?:\/\/creativecommons\.org\/licenses\/by\/4\.0\/?$/i.test(licenseUrl)
+    : /creative commons attribution license(?:\s*\(cc by 4\.0\))?/i.test(licenseText);
   if (!isCcBy40) {
     return { valid: false, error: 'The full-text license is not an approved CC BY 4.0 license.' };
   }
@@ -156,39 +156,47 @@ async function fetchEuropePmcFullText(doi) {
     throw new Error('The source DOI is invalid.');
   }
 
-  // DOI is the canonical Europe PMC field. EXT_ID is retained as a compatibility fallback.
-  const queries = ['DOI:' + normalizedDoi, 'EXT_ID:' + normalizedDoi];
-  let record = null;
-  for (const query of queries) {
-    const searchUrl = new URL(EUROPE_PMC_BASE + '/search');
-    searchUrl.searchParams.set('query', query);
-    searchUrl.searchParams.set('format', 'json');
-    searchUrl.searchParams.set('pageSize', '5');
-    const search = await fetchJson(searchUrl, 'Europe PMC search');
-    const records = search?.resultList?.result || [];
-    record = records.find((item) => {
-      const candidateDoi = String(item?.doi || '').replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').trim();
-      return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase() &&
-        typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid);
-    }) || null;
-    if (record) break;
+  // Resolve the DOI through NCBI's official PMC ID Converter, then retrieve
+  // the reusable full-text record through PMC's official OAI-PMH endpoint.
+  const converterUrl = new URL('https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/');
+  converterUrl.searchParams.set('ids', normalizedDoi);
+  converterUrl.searchParams.set('format', 'json');
+  const converted = await fetchJson(converterUrl, 'PMC ID Converter');
+  const records = converted?.records || [];
+  const record = records.find((item) => {
+    const candidateDoi = String(item?.doi || '').replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').trim();
+    return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase() &&
+      typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid) &&
+      item?.status === 'ok';
+  });
+  if (!record) {
+    throw new Error('PMC ID Converter did not return a matching DOI record with a PMCID.');
   }
 
-  const pmcid = typeof record?.pmcid === 'string' ? record.pmcid : '';
-  if (!/^PMC\d+$/.test(pmcid)) {
-    throw new Error('Europe PMC did not return a matching DOI record with a PMCID.');
-  }
-
-  const xmlUrl = EUROPE_PMC_BASE + '/' + pmcid + '/fullTextXML';
+  const pmcNumericId = record.pmcid.slice(3);
+  const oaiUrl = new URL('https://pmc.ncbi.nlm.nih.gov/api/oai/v1/mh/');
+  oaiUrl.searchParams.set('verb', 'GetRecord');
+  oaiUrl.searchParams.set('identifier', 'oai:pubmedcentral.nih.gov:' + pmcNumericId);
+  oaiUrl.searchParams.set('metadataPrefix', 'pmc');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
   try {
-    const result = await fetch(xmlUrl, { headers: { Accept: 'application/xml,text/xml' }, signal: controller.signal });
-    if (!result.ok) throw new Error('Europe PMC full text returned HTTP ' + result.status + '.');
+    const result = await fetch(oaiUrl, {
+      headers: { Accept: 'application/xml,text/xml' },
+      signal: controller.signal,
+    });
+    if (!result.ok) throw new Error('PMC OAI-PMH returned HTTP ' + result.status + '.');
     const xml = await result.text();
+    if (!/<article\b/i.test(xml)) {
+      throw new Error('PMC OAI-PMH did not return a full-text article record.');
+    }
     const extracted = extractLicensedFullText(xml);
     if (!extracted.valid) throw new Error(extracted.error);
-    return { ...extracted, pmcid, sourceUrl: 'https://europepmc.org/articles/' + pmcid };
+    return {
+      ...extracted,
+      pmcid: record.pmcid,
+      sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/' + record.pmcid + '/',
+    };
   } finally {
     clearTimeout(timeout);
   }
@@ -266,7 +274,10 @@ async function runFullTextReview(request, env) {
     fullText = await fetchEuropePmcFullText(source.doi);
   } catch (error) {
     console.error('Licensed full-text retrieval failed.', { name: error?.name || 'Error', message: error?.message || 'Unknown error' });
-    return response({ error: 'A verifiable, licensed full text could not be retrieved. Manual review is required.' }, 422);
+    return response({
+      error: 'A verifiable, licensed full text could not be retrieved. Manual review is required.',
+      reason: error?.message || 'Unknown retrieval error',
+    }, 422);
   }
 
   let quality;
