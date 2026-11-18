@@ -30,9 +30,9 @@ function getHistoryText(item) {
     item.title,
     item.answer,
     item.quick_facts?.length
-      ? item.quick_facts.map((fact, index) => `${index + 1}. ${fact}`).join('\\n')
+      ? item.quick_facts.map((fact, index) => `${index + 1}. ${fact}`).join('\n')
       : '',
-  ].filter(Boolean).join('\\n\\n').trim();
+  ].filter(Boolean).join('\n\n').trim();
 }
 
 function formatTime(iso, locale) {
@@ -47,7 +47,40 @@ function formatTime(iso, locale) {
 
 export default function HistoryList({ items, onClear }) {
   const { locale, t } = useLanguage();
-  const [selected, setSelected] = useState(null);\n  const [copied, setCopied] = useState(false);\n\n  const handleCopy = async () => {\n    if (!selected) return;\n    try {\n      await copyText(getHistoryText(selected));\n      setCopied(true);\n    } catch {\n      setCopied(false);\n    }\n  };\n\n  const handleShare = async () => {\n    if (!selected) return;\n    const text = getHistoryText(selected);\n    try {\n      if (navigator.share) {\n        await navigator.share({ title: selected.title || selected.question, text });\n      } else {\n        await copyText(text);\n        setCopied(true);\n      }\n    } catch (error) {\n      if (error?.name !== 'AbortError') {\n        try {\n          await copyText(text);\n          setCopied(true);\n        } catch {\n          setCopied(false);\n        }\n      }\n    }\n  };
+  const [selected, setSelected] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!selected) return;
+    try {
+      await copyText(getHistoryText(selected));
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!selected) return;
+    const text = getHistoryText(selected);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: selected.title || selected.question, text });
+      } else {
+        await copyText(text);
+        setCopied(true);
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        try {
+          await copyText(text);
+          setCopied(true);
+        } catch {
+          setCopied(false);
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     if (!selected) return;
