@@ -279,7 +279,7 @@ function normalizedEvidenceItems(quality, fullText) {
   }));
 }
 
-function createReviewPrompt(article, source, fullText, quality, evidenceItems) {
+function createReviewPrompt(article, source, quality, evidenceItems) {
   const paragraphs = flattenParagraphs(article);
   return [
     'Perform a strict, independent second-pass editorial review for Ratio. You are the fact-checking editor, not the article writer.',
@@ -471,8 +471,7 @@ export async function runAutomatedArticleReview(articleId, env) {
 
   const runReview = async (currentArticle) => {
     const prompt = createReviewPrompt(
-      currentArticle, context.source, context.fullText, context.quality,
-      context.verifiedEvidence
+      currentArticle, context.source, context.quality, context.verifiedEvidence
     );
     const role = 'You are Ratio AI Editorial Auditor. You independently fact-check educational articles against their supplied source. Be skeptical, precise, fair, and strict. Never approve unsupported claims. Return JSON only.';
     const paragraphCount = flattenParagraphs(currentArticle).length;
