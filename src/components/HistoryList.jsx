@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { ArrowUpRight, Copy, History, Share2, Sparkles, Trash2, X } from 'lucide-react';
 import AnswerBody from '@/components/AnswerBody';
 import { useLanguage } from '@/lib/LanguageContext';
-import { useToast } from '@/components/ui/use-toast';
 
 async function copyText(value) {
   if (navigator.clipboard?.writeText) {
@@ -48,14 +47,12 @@ function formatTime(iso, locale) {
 
 export default function HistoryList({ items, onClear }) {
   const { locale, t } = useLanguage();
-  const { toast } = useToast();
   const [selected, setSelected] = useState(null);
 
   const handleCopy = async () => {
     if (!selected) return;
     try {
       await copyText(getHistoryText(selected));
-      toast({ description: t('answer.copied') });
     } catch {
       // Keep the copy action available if the clipboard is unavailable.
     }
@@ -69,13 +66,11 @@ export default function HistoryList({ items, onClear }) {
         await navigator.share({ title: selected.title || selected.question, text });
       } else {
         await copyText(text);
-        toast({ description: t('answer.copied') });
       }
     } catch (error) {
       if (error?.name !== 'AbortError') {
         try {
           await copyText(text);
-          toast({ description: t('answer.copied') });
         } catch {
       // Keep the copy action available if the clipboard is unavailable.
     }
