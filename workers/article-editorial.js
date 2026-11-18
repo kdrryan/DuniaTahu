@@ -55,6 +55,7 @@ export function validateEditorialOutput(value, evidenceClaims) {
           section.paragraphs.length > 3 ||
           section.paragraphs.some((paragraph) => typeof paragraph !== 'string' ||
             paragraph.trim().length < 40 || paragraph.length > 1800 ||
+            !paragraph.trim().endsWith('[1]') ||
             /!\\[[^\\]]*\\]\\([^)]*\\)|<img\\b/i.test(paragraph))) {
         errors.push('sections[' + index + '].paragraphs must contain 1 to 3 substantive paragraphs.');
       }
