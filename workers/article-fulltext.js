@@ -338,7 +338,7 @@ async function generateQualityReview(env, source, research, fullText, language) 
     'SEGMENT REVIEW RESULTS: ' + JSON.stringify(compactReviews),
   ].join('\\n\\n');
   const aggregate = await callGeminiJson(env, aggregatePrompt, 'Gemini aggregate quality review');
-  return {
+  const result = {
     ...aggregate,
     keyClaims: verified.claims,
     rejectedUnsupportedClaimCount: verified.rejectedCount,
@@ -346,6 +346,15 @@ async function generateQualityReview(env, source, research, fullText, language) 
     reviewedCharacterCount: fullText.text.length,
     truncated: fullText.truncated,
   };
+  if (fullText.truncated && result.qualityDecision === 'pass') {
+    result.qualityDecision = 'needs_revision';
+    result.editorialReadiness = false;
+    result.qualityFlags = Array.isArray(result.qualityFlags) ? result.qualityFlags : [];
+    result.qualityFlags.push('The retrieved full text exceeded the review limit; only a partial article was reviewed.');
+    result.recommendations = Array.isArray(result.recommendations) ? result.recommendations : [];
+    result.recommendations.push('Retrieve and review the remaining article text before considering editorial readiness.');
+  }
+  return result;
 }
 async function runFullTextReview(request, env) {
   if (!env.ARTICLE_ADMIN_TOKEN) return response({ error: 'Article management is not configured.' }, 503);
