@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Clipboard, Copy, FileText, Loader2, Share2, Sparkles, X } from 'lucide-react';
+import { Clipboard, Copy, FileText, Loader2, Share2, Sparkles, X } from 'lucide-react';
 import AnswerBody from '@/components/AnswerBody';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useToast } from '@/components/ui/use-toast';
 
 async function copyText(value) {
   if (navigator.clipboard?.writeText) {
@@ -24,10 +25,9 @@ async function copyText(value) {
 
 export default function AnswerCard({ entry, loading }) {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [showTextView, setShowTextView] = useState(false);
   const [selectedText, setSelectedText] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [selectedCopied, setSelectedCopied] = useState(false);
   const textViewRef = useRef(null);
   const answerContentRef = useRef(null);
 
@@ -76,9 +76,9 @@ export default function AnswerCard({ entry, loading }) {
   const handleCopyAll = async () => {
     try {
       await copyText(completeAnswer);
-      setCopied(true);
+      toast({ description: t('answer.copied') });
     } catch {
-      setCopied(false);
+
     }
   };
 
@@ -86,9 +86,9 @@ export default function AnswerCard({ entry, loading }) {
     if (!selectedText) return;
     try {
       await copyText(selectedText);
-      setSelectedCopied(true);
+      toast({ description: t('answer.copied') });
     } catch {
-      setSelectedCopied(false);
+
     }
   };
 
@@ -99,15 +99,15 @@ export default function AnswerCard({ entry, loading }) {
         await navigator.share({ text: selectedText });
       } else {
         await copyText(selectedText);
-        setSelectedCopied(true);
+        toast({ description: t('answer.copied') });
       }
     } catch (error) {
       if (error?.name !== 'AbortError') {
         try {
           await copyText(selectedText);
-          setSelectedCopied(true);
+          toast({ description: t('answer.copied') });
         } catch {
-          setSelectedCopied(false);
+    
         }
       }
     }
@@ -115,14 +115,12 @@ export default function AnswerCard({ entry, loading }) {
 
   const openTextView = () => {
     setSelectedText('');
-    setSelectedCopied(false);
     setShowTextView(true);
   };
 
   const closeTextView = () => {
     setShowTextView(false);
     setSelectedText('');
-    setSelectedCopied(false);
     window.getSelection?.()?.removeAllRanges();
   };
 
@@ -144,8 +142,8 @@ export default function AnswerCard({ entry, loading }) {
               onClick={handleCopyAll}
               className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold text-foreground/70 transition hover:bg-foreground/5 hover:text-foreground"
             >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? t('answer.copied') : t('answer.copyAll')}
+              <Copy className="h-3.5 w-3.5" />
+              {t('answer.copyAll')}
             </button>
             <button
               type="button"
@@ -221,8 +219,8 @@ export default function AnswerCard({ entry, loading }) {
                   onClick={handleCopySelected}
                   className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-[11px] font-semibold text-foreground"
                 >
-                  {selectedCopied ? <Check className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}
-                  {selectedCopied ? t('answer.copied') : t('answer.copySelected')}
+                  <Clipboard className="h-3.5 w-3.5" />
+                  {t('answer.copySelected')}
                 </button>
                 <button
                   type="button"
