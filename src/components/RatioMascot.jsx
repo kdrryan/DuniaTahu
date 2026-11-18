@@ -83,8 +83,11 @@ export default function RatioMascot({ isTyping = false }) {
             key={bubble.id}
             role="status"
             aria-live="polite"
-            className={`ratio-bot-bubble absolute z-20 max-w-[46%] rounded-2xl border border-border/80 bg-card/95 px-3.5 py-2.5 text-[12px] font-medium leading-snug text-foreground shadow-lg backdrop-blur-md sm:max-w-[40%] sm:px-4 sm:py-3 sm:text-sm ${bubble.side === 'left' ? 'left-0' : 'right-0'}`}
-            style={{ top: `${bubble.top}%` }}
+            className={`ratio-bot-bubble absolute z-20 rounded-2xl border border-border/80 bg-card/95 px-2.5 py-2 text-[10.5px] font-medium leading-snug text-foreground shadow-lg backdrop-blur-md sm:px-3 sm:py-2 sm:text-[11px] ${bubble.side === 'left' ? 'left-0' : 'right-0'}`}
+            style={{
+              top: `${bubble.top}%`,
+              width: 'min(7rem, calc((100% - 8.75rem) / 2))',
+            }}
           >
             {bubble.text}
             <span
