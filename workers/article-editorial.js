@@ -51,13 +51,23 @@ export function validateEditorialOutput(value, evidenceClaims) {
       if (!section || typeof section.heading !== 'string' || !section.heading.trim()) {
         errors.push('sections[' + index + '].heading is required.');
       }
-      if (!section || !Array.isArray(section.paragraphs) || section.paragraphs.length < 1 ||
-          section.paragraphs.length > 3 ||
-          section.paragraphs.some((paragraph) => typeof paragraph !== 'string' ||
-            paragraph.trim().length < 40 || paragraph.length > 1800 ||
-            !paragraph.trim().endsWith('[1]') ||
-            /!\\[[^\\]]*\\]\\([^)]*\\)|<img\\b/i.test(paragraph))) {
-        errors.push('sections[' + index + '].paragraphs must contain 1 to 3 substantive paragraphs.');
+      if (!section || !Array.isArray(section.paragraphs)) {
+        errors.push('sections[' + index + '].paragraphs must be an array.');
+      } else {
+        if (section.paragraphs.length < 1 || section.paragraphs.length > 3) {
+          errors.push('sections[' + index + '].paragraphs must contain 1 to 3 paragraphs; received ' + section.paragraphs.length + '.');
+        }
+        section.paragraphs.forEach((paragraph, paragraphIndex) => {
+          const path = 'sections[' + index + '].paragraphs[' + paragraphIndex + ']';
+          if (typeof paragraph !== 'string') {
+            errors.push(path + ' must be a string.');
+            return;
+          }
+          if (paragraph.trim().length < 40) errors.push(path + ' is too short; write at least 40 characters.');
+          if (paragraph.length > 1800) errors.push(path + ' exceeds 1800 characters.');
+          if (!paragraph.trim().endsWith('[1]')) errors.push(path + ' must end with the exact citation marker [1].');
+          if (/!\\[[^\\]]*\\]\\([^)]*\\)|<img\\b/i.test(paragraph)) errors.push(path + ' must not contain embedded images.');
+        });
       }
     });
   }
@@ -250,7 +260,7 @@ async function runEditorialDraft(request, env) {
     'Do not copy source sentences. Paraphrase in original language. Never include long quotations.',
     'Distinguish the review authors’ conclusions from established scientific consensus. Describe this source as a systematic descriptive review, not a meta-analysis. Preserve the stated limitation that it did not conduct a meta-analysis.',
     'Explain scope and limitations fairly. Do not turn population-level findings into claims about every individual. Avoid medical advice, diagnosis, or treatment recommendations.',
-    'Create 4–6 coherent sections with 1–3 substantive paragraphs each. Every paragraph that states source-derived facts must end with citation marker [1].',
+    'Create exactly 5 coherent sections. EVERY section must contain 2 paragraphs. Every paragraph must be a plain-text string of 60–900 characters, must be substantive (not a heading, note, or placeholder), and MUST end with the exact characters [1]. This citation marker is mandatory at the end of every paragraph, including introductory and concluding paragraphs.',
     'Create 3–6 verifiedClaims. Each must identify the index of one supplied evidence item and the section where the claim is discussed. Do not invent evidence or rewrite the evidence excerpts.',
     'Return JSON exactly shaped as: {"title":"...","summary":"...","sections":[{"heading":"...","paragraphs":["..."]}],"verifiedClaims":[{"claim":"...","evidenceIndex":0,"sectionIndex":0}],"editorialNote":"..."}',
     'EDITORIAL SOURCE METADATA: ' + JSON.stringify({
@@ -282,7 +292,7 @@ async function runEditorialDraft(request, env) {
       const repairPrompt = [
         prompt,
         'IMPORTANT: Your previous JSON response failed validation. Regenerate the complete article from scratch and correct every issue listed here.',
-        'Each section must have a heading and between 1 and 3 substantive paragraphs. Each paragraph must be at least 40 characters, no more than 1800 characters, and end exactly with [1].',
+        'Return exactly 5 sections, each with exactly 2 substantive paragraph strings. Each paragraph must be 60–900 characters and end exactly with [1]. Do not omit paragraphs, return empty arrays, or put prose outside the paragraphs array.',
         'Return all required top-level fields. Include 4–6 sections and 3–6 verifiedClaims. Use only valid evidence indexes and valid section indexes.',
         'VALIDATION ERRORS TO FIX: ' + JSON.stringify(validation.errors),
         'Return JSON only. Do not explain the corrections.',
