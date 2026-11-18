@@ -1,7 +1,9 @@
+import { normalizeCitationText } from './lib/article-citations.js';
+
 const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const REVIEW_PROMPT_VERSION = 'ratio-ai-editorial-review-v1';
-const REVISION_PROMPT_VERSION = 'ratio-ai-editorial-revision-v1';
+const REVIEW_PROMPT_VERSION = 'ratio-ai-editorial-review-v2-citation-normalization';
+const REVISION_PROMPT_VERSION = 'ratio-ai-editorial-revision-v2-citation-normalization';
 
 function response(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -192,7 +194,7 @@ function blocksToSections(blocks) {
       current = { heading: String(block.content || ''), paragraphs: [] };
       sections.push(current);
     } else if (block?.type === 'paragraph' && current) {
-      current.paragraphs.push(String(block.content || ''));
+      current.paragraphs.push(normalizeCitationText(String(block.content || '')));
     }
   }
   return sections;
@@ -255,8 +257,9 @@ function buildContent(article) {
     blocks.push({ type: 'heading', content: section.heading, level: 2 });
     markdown.push('## ' + section.heading);
     for (const paragraph of section.paragraphs) {
-      blocks.push({ type: 'paragraph', content: paragraph });
-      markdown.push(paragraph);
+      const normalizedParagraph = normalizeCitationText(paragraph);
+      blocks.push({ type: 'paragraph', content: normalizedParagraph });
+      markdown.push(normalizedParagraph);
     }
     markdown.push('');
   }
@@ -288,7 +291,7 @@ function createReviewPrompt(article, source, quality, evidenceItems) {
     'For every factual claim you assess as supported, select one or more evidenceIds from VERIFIED EVIDENCE ITEMS. Each item has an ID and an exact source excerpt already verified by the system. Never invent, rewrite, or reproduce quotations. Select an ID only if its excerpt directly supports that specific claim. If none supports it, set supported=false and mark the paragraph revise or fail.',
     'Check numerical claims, dates, names, definitions, mechanisms, causal language, correlation versus causation, population generalizations, the study design, limitations, source attribution, citation markers, originality, clarity, grammar, and whether the article overstates the review authors’ conclusions.',
     'For this source, preserve that it is a systematic descriptive review, not a meta-analysis, and do not present its findings as universal clinical facts. Do not approve invented statistics, outside facts, unsupported causal claims, fabricated citations, medical advice, or claims that exceed the source.',
-    'Every paragraph must end with [1], and [1] must refer to the single source listed below. The title, DOI and attribution must match the source metadata.',
+    'Every paragraph must end with exactly one [1] citation, and [1] must refer to the single source listed below. Do not insert any other numeric citation markers such as [0], [2], or [9]. The title, DOI and attribution must match the source metadata.',
     'Return JSON exactly in this shape: {"decision":"pass|revise|reject","overallScore":0,"checks":{"factualAccuracy":"pass|revise|fail","sourceFaithfulness":"pass|revise|fail","citationIntegrity":"pass|revise|fail","scientificNuance":"pass|revise|fail","originality":"pass|revise|fail","languageQuality":"pass|revise|fail","structure":"pass|revise|fail"},"paragraphAudits":[{"paragraphIndex":0,"result":"pass|revise|fail","claims":[{"claim":"...","supported":true,"evidenceIds":["E1"]}],"note":"..."}],"findings":[{"severity":"critical|major|minor","paragraphIndex":0,"issue":"...","suggestedFix":"..."}],"summary":"..."}',
     'Choose pass only when every paragraph is audited, all factual claims are supported by the supplied evidence items, every check passes, there are no critical or major findings, and score is at least 90. Evidence IDs are references, not proof by themselves: judge whether each selected excerpt actually entails the claim. Use revise for fixable issues and reject when the source or article is fundamentally unsuitable.',
     'ARTICLE UNDER REVIEW: ' + JSON.stringify({
@@ -314,7 +317,7 @@ function createRevisionPrompt(article, review, source, fullText, quality, eviden
     'Revise the Ratio educational article using the independent AI fact-check below.',
     'Correct every critical and major issue, and improve any minor issues when practical. Remove or qualify unsupported claims. Do not invent a replacement fact. When a claim cannot be supported by the source, omit it or state the limitation clearly.',
     'Use only the full text and verified evidence below. Preserve accurate findings, source limitations, cautious scientific framing, original wording, and the article language.',
-    'Every paragraph must end with [1]. Return exactly the same JSON shape as the original article: {"title":"...","summary":"...","sections":[{"heading":"...","paragraphs":["..."]}],"verifiedClaims":[{"claim":"...","evidenceIndex":0,"sectionIndex":0}],"editorialNote":"..."}',
+    'Every paragraph must end with exactly one [1] citation. Do not insert other numeric citation markers. Return exactly the same JSON shape as the original article: {"title":"...","summary":"...","sections":[{"heading":"...","paragraphs":["..."]}],"verifiedClaims":[{"claim":"...","evidenceIndex":0,"sectionIndex":0}],"editorialNote":"..."}',
     'Keep 4 to 8 sections, 1 to 3 substantive paragraphs per section, each paragraph 40 to 1800 characters. Include 3 to 8 evidence-linked verifiedClaims using only valid evidence indexes.',
     'CURRENT ARTICLE: ' + JSON.stringify(article),
     'AI FACT-CHECK FINDINGS: ' + JSON.stringify(review),
@@ -552,11 +555,23 @@ export async function runAutomatedArticleReview(articleId, env) {
       article, currentReview.raw, context.source, context.fullText,
       context.quality, context.verifiedEvidence
     );
-    const revised = await callGemini(
+    let revised = await callGemini(
       env, revisionPrompt,
       'You are Ratio Editorial Correction Writer. Correct the article using only supplied source evidence and audit findings. Do not invent facts. Return a complete valid article JSON object only.',
       8192
     );
+    if (Array.isArray(revised?.sections)) {
+      revised = {
+        ...revised,
+        sections: revised.sections.map((section) => ({
+          ...section,
+          paragraphs: Array.isArray(section?.paragraphs)
+            ? section.paragraphs.map((paragraph) =>
+              typeof paragraph === 'string' ? normalizeCitationText(paragraph) : paragraph)
+            : section?.paragraphs,
+        })),
+      };
+    }
     const revisionValidation = validateRevision(revised, context.verifiedEvidence.length);
     if (!revisionValidation.valid) {
       return {
