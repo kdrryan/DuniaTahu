@@ -243,12 +243,20 @@ export default function ArticleDetail() {
       className="reader-page min-h-screen"
       style={{ background: colors.page, color: colors.text, transition: 'background .2s ease, color .2s ease' }}
     >
-      <div className="fixed left-0 right-0 top-0 z-50 h-[3px]" style={{ background: colors.line }}>
-        <div className="h-full bg-[#52769A] transition-[width] duration-150" style={{ width: progress + '%' }} />
+      <div
+        className="fixed left-0 right-0 top-0 z-50 h-[12px] backdrop-blur-xl"
+        style={{
+          background: dark ? 'rgba(25,27,31,.78)' : 'rgba(247,246,242,.78)',
+          borderBottom: '1px solid ' + colors.line,
+        }}
+      >
+        <div className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: colors.line }}>
+          <div className="h-full bg-[#52769A] transition-[width] duration-150" style={{ width: progress + '%' }} />
+        </div>
       </div>
 
       <header
-        className="sticky top-[3px] z-40 border-b backdrop-blur-xl"
+        className="sticky top-[12px] z-40 border-b backdrop-blur-xl"
         style={{ background: dark ? 'rgba(25,27,31,.92)' : 'rgba(247,246,242,.92)', borderColor: colors.line }}
       >
         <div className="mx-auto flex h-[62px] w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-7">
