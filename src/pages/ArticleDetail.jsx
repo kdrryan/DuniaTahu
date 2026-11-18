@@ -8,12 +8,14 @@ import {
   Clock3,
   ExternalLink,
   List,
+  LoaderCircle,
+  MessageCircleQuestion,
   Moon,
   Sun,
   Type,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchArticle } from '@/lib/api';
+import { askWorld, fetchArticle } from '@/lib/api';
 import { useLanguage } from '@/lib/LanguageContext';
 import { isArticleSaved, toggleSavedArticle } from '@/lib/savedArticles';
 
@@ -106,14 +108,17 @@ export default function ArticleDetail() {
   const [failed, setFailed] = useState(false);
   const [saved, setSaved] = useState(() => isArticleSaved(articleId));
   const [fontSize, setFontSize] = useState(() => {
-    const value = Number(readPreference(FONT_KEY, '18'));
-    return Number.isFinite(value) ? Math.min(23, Math.max(16, value)) : 18;
+    const value = Number(readPreference(FONT_KEY, '16'));
+    return Number.isFinite(value) ? Math.min(20, Math.max(15, value)) : 16;
   });
   const [readerTheme, setReaderTheme] = useState(() => readPreference(THEME_KEY, 'light') === 'dark' ? 'dark' : 'light');
   const [showTypeControls, setShowTypeControls] = useState(false);
   const [showContents, setShowContents] = useState(false);
   const [progress, setProgress] = useState(0);
   const [shareCopied, setShareCopied] = useState(false);
+  const [selection, setSelection] = useState(null);
+  const [askAnswer, setAskAnswer] = useState(null);
+  const [asking, setAsking] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -169,6 +174,37 @@ export default function ArticleDetail() {
   const colors = dark
     ? { page: '#191B1F', surface: '#202329', text: '#F0EEE9', muted: '#A7A8A5', line: 'rgba(255,255,255,.12)', soft: '#252A31' }
     : { page: '#F7F6F2', surface: '#FDFCFA', text: '#252721', muted: '#777970', line: 'rgba(37,39,33,.13)', soft: '#EEECE5' };
+
+  const captureSelection = () => {
+    const selected = window.getSelection?.();
+    const text = selected?.toString().trim();
+    if (!text || text.length > 900) {
+      setSelection(null);
+      return;
+    }
+    const range = selected.rangeCount ? selected.getRangeAt(0) : null;
+    const rect = range?.getBoundingClientRect();
+    if (!rect || !rect.width || !rect.height) return;
+    setSelection({ text, x: Math.min(window.innerWidth - 90, Math.max(90, rect.left + rect.width / 2)), y: Math.max(12, rect.top - 48) });
+  };
+
+  const handleAskRatio = async () => {
+    if (!selection?.text || asking) return;
+    setAsking(true);
+    setSelection(null);
+    setAskAnswer({ question: selection.text, answer: '' });
+    try {
+      const result = await askWorld({
+        question: `Konteks artikel: ${article?.title || 'Hutan Amazon'}. Teks yang dipilih pengguna: “${selection.text}”. Jelaskan arti kata, kalimat, atau gagasan tersebut berdasarkan konteks artikel. Gunakan bahasa sederhana, langsung ke inti, dan jangan mengulang seluruh artikel.`,
+        lang,
+      });
+      setAskAnswer({ question: selection.text, answer: result.answer });
+    } catch {
+      setAskAnswer({ question: selection.text, answer: isId ? 'Ratio belum dapat menjelaskan bagian ini. Coba lagi sebentar.' : 'Ratio could not explain this passage. Please try again.' });
+    } finally {
+      setAsking(false);
+    }
+  };
 
   const handleBookmark = () => {
     if (!article) return;
@@ -247,8 +283,8 @@ export default function ArticleDetail() {
                   <div className="mt-3 flex items-center justify-between gap-3">
                     <button
                       type="button"
-                      onClick={() => setFontSize((size) => Math.max(16, size - 1))}
-                      disabled={fontSize <= 16}
+                      onClick={() => setFontSize((size) => Math.max(15, size - 1))}
+                      disabled={fontSize <= 15}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30"
                       style={{ borderColor: colors.line }}
                       aria-label={isId ? 'Perkecil teks' : 'Decrease text size'}
@@ -256,8 +292,8 @@ export default function ArticleDetail() {
                     <span className="text-sm font-semibold tabular-nums">{fontSize}px</span>
                     <button
                       type="button"
-                      onClick={() => setFontSize((size) => Math.min(23, size + 1))}
-                      disabled={fontSize >= 23}
+                      onClick={() => setFontSize((size) => Math.min(20, size + 1))}
+                      disabled={fontSize >= 20}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full border disabled:opacity-30"
                       style={{ borderColor: colors.line }}
                       aria-label={isId ? 'Perbesar teks' : 'Increase text size'}
@@ -378,7 +414,7 @@ export default function ArticleDetail() {
             {(article.coverImage || article.imageUrl || article.heroImage) && (
               <figure className="mb-10 overflow-hidden rounded-[5px] sm:mb-12">
                 <img
-                  src={article.coverImage || article.imageUrl || article.heroImage}
+                  src={article.coverImage?.url || article.imageUrl || article.heroImage}
                   alt={article.title || ''}
                   className="aspect-[16/9] w-full object-cover"
                   loading="eager"
@@ -386,7 +422,7 @@ export default function ArticleDetail() {
               </figure>
             )}
 
-            <div className="reader-content">
+            <div className="reader-content" onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 80)} onContextMenu={() => window.setTimeout(captureSelection, 80)}>
               {blocks.map((block, index) => {
                 if (block.type === 'heading') {
                   const headingIndex = headings.findIndex((item) => item === block);
@@ -399,6 +435,15 @@ export default function ArticleDetail() {
                     >
                       {block.content}
                     </h2>
+                  );
+                }
+                if (block.type === 'image' && block.url) {
+                  return (
+                    <figure key={index} className="my-9 sm:my-11">
+                      <img src={block.url} alt={block.alt || ''} loading="lazy" className="aspect-[16/10] w-full rounded-md object-cover" />
+                      {block.caption && <figcaption className="mt-2 text-xs leading-5" style={{ color: colors.muted }}>{block.caption}</figcaption>}
+                      {block.creator && <p className="mt-1 text-[10px] leading-4" style={{ color: colors.muted }}>Foto: {block.creator} · <a href={block.sourceUrl} target="_blank" rel="noreferrer" className="underline">Sumber foto</a> · {block.license}</p>}
+                    </figure>
                   );
                 }
                 if (block.type === 'paragraph') {
@@ -510,6 +555,25 @@ export default function ArticleDetail() {
           </article>
         )}
       </main>
+
+      {selection && (
+        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={handleAskRatio} className="fixed z-[70] -translate-x-1/2 rounded-full border px-3.5 py-2 text-xs font-semibold shadow-lg" style={{ left: selection.x, top: selection.y, background: colors.surface, color: colors.text, borderColor: colors.line }}>
+          <MessageCircleQuestion className="mr-1.5 inline h-3.5 w-3.5 text-[#52769A]" />Ask Ratio
+        </button>
+      )}
+
+      {(askAnswer || asking) && (
+        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/25 p-3 sm:items-center" onClick={() => { if (!asking) setAskAnswer(null); }}>
+          <section className="w-full max-w-lg rounded-2xl border p-5 shadow-2xl" style={{ background: colors.surface, color: colors.text, borderColor: colors.line }} onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold"><MessageCircleQuestion className="h-4 w-4 text-[#52769A]" />Ask Ratio</div>
+              <button type="button" onClick={() => setAskAnswer(null)} disabled={asking} aria-label="Close" className="rounded-full p-1.5 hover:bg-black/5 disabled:opacity-40"><span className="text-lg leading-none">×</span></button>
+            </div>
+            {askAnswer?.question && <p className="mt-3 rounded-lg px-3 py-2 text-xs leading-5" style={{ background: colors.soft, color: colors.muted }}>{askAnswer.question}</p>}
+            {asking ? <p className="mt-4 flex items-center gap-2 text-sm" style={{ color: colors.muted }}><LoaderCircle className="h-4 w-4 animate-spin" />{isId ? 'Ratio sedang menjelaskan…' : 'Ratio is explaining…'}</p> : <p className="mt-4 whitespace-pre-wrap text-sm leading-7">{askAnswer?.answer}</p>}
+          </section>
+        </div>
+      )}
 
       {shareCopied && (
         <div role="status" className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[#252721] px-4 py-2.5 text-xs font-semibold text-white shadow-lg">
