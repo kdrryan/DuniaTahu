@@ -26,6 +26,14 @@ test('rejects missing and non-approved licenses', () => {
   assert.equal(extractLicensedFullText(restricted).valid, false);
 });
 
+
+test('accepts the canonical HTTP CC BY 4.0 license URI used by PMC records', () => {
+  const httpLicense = xml.replace('https://creativecommons.org/licenses/by/4.0/', 'http://creativecommons.org/licenses/by/4.0/');
+  const result = extractLicensedFullText(httpLicense);
+  assert.equal(result.valid, true);
+  assert.equal(result.license, 'CC BY 4.0');
+});
+
 test('rejects a short or missing article body', () => {
   const short = xml.replace('Climate change affects mental health in many different populations. '.repeat(20), 'Too short.');
   assert.equal(extractLicensedFullText(short).valid, false);
