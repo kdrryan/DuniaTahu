@@ -163,15 +163,17 @@ async function fetchEuropePmcFullText(doi) {
   converterUrl.searchParams.set('idtype', 'doi');
   converterUrl.searchParams.set('format', 'json');
   const converted = await fetchJson(converterUrl, 'PMC ID Converter');
+  if (converted?.status !== 'ok') {
+    throw new Error('PMC ID Converter returned status ' + (converted?.status || 'unknown') + '.');
+  }
   const records = converted?.records || [];
   const record = records.find((item) => {
     const candidateDoi = String(item?.doi || '').replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').trim();
     return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase() &&
-      typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid) &&
-      item?.status === 'ok';
+      typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid);
   });
   if (!record) {
-    throw new Error('PMC ID Converter did not return a matching DOI record with a PMCID.');
+    throw new Error('PMC ID Converter returned status ok but no matching DOI record with a PMCID.');
   }
 
   const pmcNumericId = record.pmcid.slice(3);
