@@ -244,14 +244,14 @@
   isolation: isolate;
   transform-style: preserve-3d;
   background:
-    radial-gradient(ellipse at 31% 20%, rgba(255,255,255,.16) 0%, rgba(255,255,255,.055) 13%, transparent 34%),
-    radial-gradient(circle at 34% 27%, #24262d 0%, #101116 29%, #060608 58%, #010102 100%);
-  border: 1px solid rgba(255,255,255,.11);
+    radial-gradient(ellipse at 31% 20%, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 13%, transparent 34%),
+    radial-gradient(circle at 34% 27%, #1b1c22 0%, #0d0e12 29%, #050506 58%, #010102 100%);
+  border: 1px solid rgba(255,255,255,.09);
   box-shadow:
-    inset 10px 9px 20px rgba(255,255,255,.075),
-    inset -14px -18px 28px rgba(0,0,0,.92),
-    inset 0 0 0 1px rgba(255,255,255,.025),
-    0 18px 38px rgba(0,0,0,.38);
+    inset 8px 7px 16px rgba(255,255,255,.045),
+    inset -12px -15px 24px rgba(0,0,0,.94),
+    inset 0 0 0 1px rgba(255,255,255,.018),
+    0 16px 32px rgba(0,0,0,.32);
   animation: ratio-bot-head-turn 13s cubic-bezier(.45,0,.35,1) infinite;
   transition: box-shadow 220ms ease;
 }
@@ -262,7 +262,7 @@
   inset: 5% 8% auto 11%;
   height: 35%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,255,255,.11), rgba(255,255,255,.025) 42%, transparent 72%);
+  background: radial-gradient(ellipse, rgba(255,255,255,.065), rgba(255,255,255,.012) 42%, transparent 72%);
   filter: blur(5px);
   transform: rotate(-24deg);
   pointer-events: none;
@@ -270,10 +270,10 @@
 
 .ratio-bot-gloss {
   z-index: 1;
-  opacity: .46;
+  opacity: .28;
   background:
-    radial-gradient(ellipse at 25% 14%, rgba(255,255,255,.18), transparent 27%),
-    linear-gradient(142deg, transparent 34%, rgba(255,255,255,.025) 48%, transparent 62%);
+    radial-gradient(ellipse at 25% 14%, rgba(255,255,255,.10), transparent 27%),
+    linear-gradient(142deg, transparent 34%, rgba(255,255,255,.015) 48%, transparent 62%);
   pointer-events: none;
   animation: ratio-bot-gloss-shift 13s ease-in-out infinite;
 }
@@ -281,16 +281,61 @@
 .ratio-bot-face {
   transform-style: preserve-3d;
   animation: ratio-bot-face-turn 13s ease-in-out infinite;
-}
-
-.ratio-bot-eyes-idle {
-  animation: ratio-bot-look 7.8s ease-in-out infinite;
   transition: transform 240ms ease;
 }
 
-.ratio-bot-eyes-typing {
-  transform: translate3d(0, 7px, 0) scaleY(.86);
-  transition: transform 220ms ease;
+.ratio-bot-face-idle {
+  animation: ratio-bot-face-turn 13s ease-in-out infinite, ratio-bot-look 7.8s ease-in-out infinite;
+}
+
+.ratio-bot-face-curious {
+  transform: translate3d(0, -3px, 9px) scale(1.04);
+}
+
+.ratio-bot-face-curious .ratio-bot-eye-left {
+  transform: translate3d(0, -4px, 9px) scaleY(1.08);
+}
+
+.ratio-bot-face-curious .ratio-bot-eye-right {
+  transform: translate3d(0, 2px, 9px) scaleY(.9);
+}
+
+.ratio-bot-face-happy {
+  transform: translate3d(0, 1px, 9px) scale(1.03);
+}
+
+.ratio-bot-face-happy .ratio-bot-eye {
+  transform: translate3d(0, 2px, 9px) scaleY(.52);
+}
+
+.ratio-bot-face-thinking {
+  transform: translate3d(0, -4px, 9px) scale(.97);
+}
+
+.ratio-bot-face-thinking .ratio-bot-eye {
+  transform: translate3d(0, -5px, 9px) scaleY(.9);
+}
+
+.ratio-bot-thinking-dots {
+  height: 8px;
+}
+
+.ratio-bot-thinking-dots i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #dce8ff;
+  opacity: .38;
+  animation: ratio-bot-think 1.05s ease-in-out infinite;
+}
+
+.ratio-bot-thinking-dots i:nth-child(2) {
+  animation-delay: .15s;
+}
+
+.ratio-bot-thinking-dots i:nth-child(3) {
+  animation-delay: .3s;
 }
 
 .ratio-bot-eye {
@@ -370,6 +415,11 @@
   43.5% { scale: 1 .08; }
 }
 
+@keyframes ratio-bot-think {
+  0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
 @keyframes ratio-bot-tap-reaction {
   0% { transform: rotateY(0) scale(1); }
   22% { transform: rotateY(-13deg) scale(1.045); }
@@ -389,8 +439,9 @@
   .ratio-bot-head,
   .ratio-bot-gloss,
   .ratio-bot-face,
-  .ratio-bot-eyes-idle,
+  .ratio-bot-face-idle,
   .ratio-bot-eye,
+  .ratio-bot-thinking-dots i,
   .ratio-bot-bubble,
   .ratio-bot-reacting {
     animation: none !important;
