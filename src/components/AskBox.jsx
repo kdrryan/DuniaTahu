@@ -89,7 +89,7 @@ export default function AskBox({ onAsk, loading, onTypingChange, onGazeChange })
   return (
     <div>
       <form onSubmit={submit}>
-        <div className="glass-soft rounded-2xl p-1.5 transition focus-within:border-foreground/25">
+        <div className="rounded-2xl border border-border/80 bg-muted/45 p-1.5 transition focus-within:border-foreground/25">
           <textarea
             value={value}
             onChange={(event) => {
