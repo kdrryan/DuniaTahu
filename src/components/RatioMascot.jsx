@@ -148,23 +148,19 @@ export default function RatioMascot({ isTyping = false, isThinking = false, typi
           >
             <span className={`ratio-bot-face ratio-bot-face-${expression} relative z-10 flex items-center justify-center`}>
               <span
-                className={`ratio-bot-eyes absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[18px] ${isTyping ? 'ratio-bot-eyes-tracking' : screenGaze ? 'ratio-bot-eyes-tracking' : 'ratio-bot-eyes-idle'}`}
+                className={`ratio-bot-eyes absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[18px] ${isThinking ? 'ratio-bot-eyes-thinking' : isTyping || screenGaze ? 'ratio-bot-eyes-tracking' : 'ratio-bot-eyes-idle'}`}
                 style={{
                   '--gaze-x': `${(isTyping ? (typingGaze?.x ?? 0) : (screenGaze?.x ?? 0)) * 7}px`,
                   '--gaze-y': `${isTyping ? 4 + (typingGaze?.y ?? 0.5) * 5 : (screenGaze?.y ?? 0) * 6}px`,
                 }}
+                role={isThinking ? 'status' : undefined}
+                aria-label={isThinking ? (lang === 'en' ? 'Thinking' : 'Sedang berpikir') : undefined}
               >
                 <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+                {isThinking && (
+                  <span className="ratio-bot-eye ratio-bot-eye-center block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+                )}
                 <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
-              </span>
-              <span
-                className="ratio-bot-thinking-dots absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5"
-                role="status"
-                aria-label={lang === 'en' ? 'Thinking' : 'Sedang berpikir'}
-              >
-                <i />
-                <i />
-                <i />
               </span>
             </span>
           </span>
