@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   extractLicensedFullText,
+  findMatchingPmcRecord,
   retainEvidenceBackedClaims,
   validateQualityOutput,
 } from '../article-fulltext.js';
@@ -11,6 +12,37 @@ const xml = `<?xml version="1.0"?>
   <front><article-meta><permissions><license xlink:href="https://creativecommons.org/licenses/by/4.0/"><license-p>This is an open-access article distributed under the Creative Commons Attribution License (CC BY 4.0).</license-p></license></permissions></article-meta></front>
   <body><sec><title>Introduction</title><p>${'Climate change affects mental health in many different populations. '.repeat(20)}</p><p>Researchers describe several pathways and limitations.</p></sec><ref-list><ref>Excluded reference text</ref></ref-list></body>
 </article>`;
+
+test('matches a PMC converter record using top-level response status', () => {
+  const record = findMatchingPmcRecord({
+    status: 'ok',
+    records: [{
+      doi: '10.3389/fpsyt.2020.00074',
+      pmcid: 'PMC7068211',
+      pmid: 32210846,
+      'requested-id': '10.3389/fpsyt.2020.00074',
+    }],
+  }, 'https://doi.org/10.3389/fpsyt.2020.00074');
+  assert.equal(record?.pmcid, 'PMC7068211');
+});
+
+test('rejects PMC converter responses without top-level success or a matching PMCID', () => {
+  assert.equal(findMatchingPmcRecord({
+    records: [{ doi: '10.3389/fpsyt.2020.00074', pmcid: 'PMC7068211', status: 'ok' }],
+  }, '10.3389/fpsyt.2020.00074'), null);
+  assert.equal(findMatchingPmcRecord({
+    status: 'error',
+    records: [{ doi: '10.3389/fpsyt.2020.00074', pmcid: 'PMC7068211' }],
+  }, '10.3389/fpsyt.2020.00074'), null);
+  assert.equal(findMatchingPmcRecord({
+    status: 'ok',
+    records: [{ doi: '10.3389/fpsyt.2020.00074', pmcid: '32210846' }],
+  }, '10.3389/fpsyt.2020.00074'), null);
+  assert.equal(findMatchingPmcRecord({
+    status: 'ok',
+    records: [{ doi: '10.1000/not-the-same', pmcid: 'PMC7068211' }],
+  }, '10.3389/fpsyt.2020.00074'), null);
+});
 
 test('extracts readable full text only when CC BY 4.0 is verified', () => {
   const result = extractLicensedFullText(xml);
