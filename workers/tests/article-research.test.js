@@ -37,3 +37,19 @@ test('rejects findings without traceable abstract evidence', () => {
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.includes('evidenceFromAbstract')));
 });
+
+test('rejects evidence excerpts that do not occur in the source abstract', () => {
+  const result = validateResearchOutput({
+    researchQuestion: 'Question',
+    abstractSummary: 'Summary',
+    keyFindings: [{
+      claim: 'Claim',
+      evidenceFromAbstract: 'fabricated source excerpt',
+      confidence: 'high',
+    }],
+    limitations: ['Unknown'],
+    sourceAssessment: 'Assessment',
+  }, 'The actual source abstract contains different words.');
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.includes('not present in the source abstract')));
+});
