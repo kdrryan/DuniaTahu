@@ -301,7 +301,7 @@ async function runEditorialDraft(request, env) {
       validation = validateEditorialOutput(generated, verifiedEvidence);
     }
   } catch (error) {
-    console.error('Editorial draft generation failed.', { name: error?.name || 'Error' });
+    console.error('Editorial draft generation failed.', { name: error?.name || 'Error', reason: String(error?.message || 'Unknown error').slice(0, 240) });
     return response({ error: 'The editorial draft could not be generated right now.' }, 502);
   }
 
