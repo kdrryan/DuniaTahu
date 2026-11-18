@@ -314,8 +314,8 @@ async function runEditorialDraft(request, env) {
         article_id, category_code, category_sequence, special_number, slug,
         language, title, summary, content_markdown, content_blocks_json,
         reading_time_minutes, status
-      ) VALUES (?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, 'draft')`
-    ).bind(articleId, categoryCode, slug, language, generated.title.trim(),
+      ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, 'draft')`
+    ).bind(articleId, categoryCode, sequence, slug, language, generated.title.trim(),
       generated.summary.trim(), contentMarkdown, JSON.stringify(contentBlocks), readingTimeMinutes),
     env.DB.prepare(
       `INSERT INTO article_sources
