@@ -23,8 +23,7 @@ async function copyText(value) {
 }
 
 export default function AnswerCard({ entry, loading }) {
-  const { lang, t } = useLanguage();
-  const isId = lang !== 'en';
+  const { t } = useLanguage();
   const [showTextView, setShowTextView] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -166,14 +165,6 @@ export default function AnswerCard({ entry, loading }) {
           )}
           <div ref={answerContentRef} className="mt-3">
             <AnswerBody text={entry.answer} />
-            {entry.quick_facts?.length > 0 && (
-              <div className="mt-4">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{t('answer.quick')}</p>
-                <ul className="list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-foreground/70">
-                  {entry.quick_facts.map((item, index) => <li key={index}>{item}</li>)}
-                </ul>
-              </div>
-            )}
           </div>
 
           {entry.quick_facts?.length > 0 && (
