@@ -5,6 +5,7 @@ import { handleArticleResearchRequest } from './article-research.js';
 import { handleArticleFullTextRequest } from './article-fulltext.js';
 import { validateArticleDraft } from './lib/article-validation.js';
 import { handleEditorialDraftRequest } from './article-editorial.js';
+import { handleArticleAiReviewRequest } from './article-ai-review.js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -336,6 +337,9 @@ export async function handleArticleLibraryRequest(request, env) {
 
   const editorialResponse = await handleEditorialDraftRequest(request, env);
   if (editorialResponse) return editorialResponse;
+
+  const aiReviewResponse = await handleArticleAiReviewRequest(request, env);
+  if (aiReviewResponse) return aiReviewResponse;
 
   const candidateResponse = await handleOpenAlexCandidateRequest(request, env);
   if (candidateResponse) return candidateResponse;
