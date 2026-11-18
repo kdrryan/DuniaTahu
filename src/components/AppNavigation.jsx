@@ -6,7 +6,7 @@ function RatioMark() {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-transparent p-0 dark:bg-white dark:p-px"
+      className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-transparent p-0 dark:bg-white dark:p-px"
     >
       <img
         src="/brand/ratiobot-mark.svg"
