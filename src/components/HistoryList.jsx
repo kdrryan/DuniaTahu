@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Check, Copy, History, Share2, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowUpRight, Copy, History, Share2, Sparkles, Trash2, X } from 'lucide-react';
 import AnswerBody from '@/components/AnswerBody';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useToast } from '@/components/ui/use-toast';
 
 async function copyText(value) {
   if (navigator.clipboard?.writeText) {
@@ -47,16 +48,16 @@ function formatTime(iso, locale) {
 
 export default function HistoryList({ items, onClear }) {
   const { locale, t } = useLanguage();
+  const { toast } = useToast();
   const [selected, setSelected] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     if (!selected) return;
     try {
       await copyText(getHistoryText(selected));
-      setCopied(true);
+      toast({ description: t('answer.copied') });
     } catch {
-      setCopied(false);
+
     }
   };
 
@@ -68,15 +69,15 @@ export default function HistoryList({ items, onClear }) {
         await navigator.share({ title: selected.title || selected.question, text });
       } else {
         await copyText(text);
-        setCopied(true);
+        toast({ description: t('answer.copied') });
       }
     } catch (error) {
       if (error?.name !== 'AbortError') {
         try {
           await copyText(text);
-          setCopied(true);
+          toast({ description: t('answer.copied') });
         } catch {
-          setCopied(false);
+    
         }
       }
     }
@@ -125,7 +126,7 @@ export default function HistoryList({ items, onClear }) {
             <li key={item.id}>
               <button
                 type="button"
-                onClick={() => { setCopied(false); setSelected(item); }}
+                onClick={() => setSelected(item)}
                 className="group flex w-full items-start gap-2.5 rounded-2xl border border-border/70 bg-muted/35 px-3 py-2.5 text-left transition hover:border-foreground/25 hover:bg-muted/65"
               >
                 <span className="min-w-0 flex-1">
@@ -169,8 +170,8 @@ export default function HistoryList({ items, onClear }) {
                     onClick={handleCopy}
                     className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-muted/45 px-2.5 text-[11px] font-semibold text-foreground transition hover:bg-muted"
                   >
-                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                    {copied ? t('answer.copied') : t('answer.copyAll')}
+                    <Copy className="h-3.5 w-3.5" />
+                    {t('answer.copyAll')}
                   </button>
                   <button
                     type="button"
