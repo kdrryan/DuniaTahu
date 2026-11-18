@@ -17,7 +17,7 @@ const SUGGESTIONS = {
   ],
 };
 
-export default function AskBox({ onAsk, loading }) {
+export default function AskBox({ onAsk, loading, onTypingChange }) {
   const { lang, t } = useLanguage();
   const [value, setValue] = useState('');
   const suggestions = SUGGESTIONS[lang] || SUGGESTIONS.id;
@@ -28,6 +28,7 @@ export default function AskBox({ onAsk, loading }) {
     if (!question || loading) return;
     onAsk(question);
     setValue('');
+    onTypingChange?.(false);
   };
 
   const handleKeyDown = (event) => {
@@ -43,7 +44,13 @@ export default function AskBox({ onAsk, loading }) {
         <div className="glass-soft rounded-2xl p-1.5 transition focus-within:border-foreground/25">
           <textarea
             value={value}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              setValue(nextValue);
+              onTypingChange?.(Boolean(nextValue.trim()));
+            }}
+            onFocus={() => onTypingChange?.(Boolean(value.trim()))}
+            onBlur={() => onTypingChange?.(false)}
             onKeyDown={handleKeyDown}
             rows={2}
             maxLength={300}
