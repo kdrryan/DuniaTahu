@@ -182,10 +182,7 @@ export default function ArticleDetail() {
       setSelection(null);
       return;
     }
-    const range = selected.rangeCount ? selected.getRangeAt(0) : null;
-    const rect = range?.getBoundingClientRect();
-    if (!rect || !rect.width || !rect.height) return;
-    setSelection({ text, x: Math.min(window.innerWidth - 90, Math.max(90, rect.left + rect.width / 2)), y: Math.max(12, rect.top - 48) });
+    setSelection({ text });
   };
 
   const handleAskRatio = async () => {
@@ -565,9 +562,21 @@ export default function ArticleDetail() {
       </main>
 
       {selection && (
-        <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={handleAskRatio} className="fixed z-[70] -translate-x-1/2 rounded-full border px-3.5 py-2 text-xs font-semibold shadow-lg" style={{ left: selection.x, top: selection.y, background: colors.surface, color: colors.text, borderColor: colors.line }}>
-          <MessageCircleQuestion className="mr-1.5 inline h-3.5 w-3.5 text-[#52769A]" />Ask Ratio
-        </button>
+        <div
+          className="fixed left-1/2 top-[5.1rem] z-[70] -translate-x-1/2"
+          style={{ maxWidth: 'calc(100vw - 2rem)' }}
+        >
+          <button
+            type="button"
+            onPointerDown={(event) => event.preventDefault()}
+            onClick={handleAskRatio}
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-xs font-semibold shadow-lg"
+            style={{ background: colors.surface, color: colors.text, borderColor: colors.line }}
+          >
+            <MessageCircleQuestion className="h-3.5 w-3.5 text-[#52769A]" />
+            {isId ? 'Tanya Ratio' : 'Ask Ratio'}
+          </button>
+        </div>
       )}
 
       {(askAnswer || asking) && (
