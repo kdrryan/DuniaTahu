@@ -6,7 +6,7 @@ import { handleArticleResearchRequest } from './article-research.js';
 import { handleArticleFullTextRequest } from './article-fulltext.js';
 import { validateArticleDraft } from './lib/article-validation.js';
 import { handleEditorialDraftRequest } from './article-editorial.js';
-import { handleArticleAiReviewRequest } from './article-ai-review.js';
+import { handleArticleAiReviewRequest, runAutomatedArticleReview } from './article-ai-review.js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
