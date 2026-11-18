@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Clipboard, Copy, FileText, Loader2, Share2, Sparkles, X } from 'lucide-react';
 import AnswerBody from '@/components/AnswerBody';
 import { useLanguage } from '@/lib/LanguageContext';
-import { useToast } from '@/components/ui/use-toast';
 
 async function copyText(value) {
   if (navigator.clipboard?.writeText) {
@@ -25,7 +24,6 @@ async function copyText(value) {
 
 export default function AnswerCard({ entry, loading }) {
   const { t } = useLanguage();
-  const { toast } = useToast();
   const [showTextView, setShowTextView] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const textViewRef = useRef(null);
@@ -76,7 +74,6 @@ export default function AnswerCard({ entry, loading }) {
   const handleCopyAll = async () => {
     try {
       await copyText(completeAnswer);
-      toast({ description: t('answer.copied') });
     } catch {
       // Keep the copy action available if the clipboard is unavailable.
     }
@@ -86,7 +83,6 @@ export default function AnswerCard({ entry, loading }) {
     if (!selectedText) return;
     try {
       await copyText(selectedText);
-      toast({ description: t('answer.copied') });
     } catch {
       // Keep the copy action available if the clipboard is unavailable.
     }
@@ -99,13 +95,11 @@ export default function AnswerCard({ entry, loading }) {
         await navigator.share({ text: selectedText });
       } else {
         await copyText(selectedText);
-        toast({ description: t('answer.copied') });
       }
     } catch (error) {
       if (error?.name !== 'AbortError') {
         try {
           await copyText(selectedText);
-          toast({ description: t('answer.copied') });
         } catch {
       // Keep the copy action available if the clipboard is unavailable.
     }
