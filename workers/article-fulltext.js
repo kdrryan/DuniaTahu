@@ -40,6 +40,23 @@ function decodeXml(value) {
     .replace(/&apos;/g, "'");
 }
 
+export function findMatchingPmcRecord(converted, doi) {
+  if (converted?.status !== 'ok' || !Array.isArray(converted.records)) return null;
+  const normalizedDoi = String(doi || '')
+    .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '')
+    .trim()
+    .toLowerCase();
+  if (!normalizedDoi) return null;
+  return converted.records.find((item) => {
+    const candidateDoi = String(item?.doi || '')
+      .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '')
+      .trim()
+      .toLowerCase();
+    return candidateDoi === normalizedDoi &&
+      typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid);
+  }) || null;
+}
+
 function stripXml(value) {
   return decodeXml(value
     .replace(/<!--[\s\S]*?-->/g, ' ')
@@ -163,16 +180,11 @@ async function fetchEuropePmcFullText(doi) {
   converterUrl.searchParams.set('idtype', 'doi');
   converterUrl.searchParams.set('format', 'json');
   const converted = await fetchJson(converterUrl, 'PMC ID Converter');
-  if (converted?.status !== 'ok') {
-    throw new Error('PMC ID Converter returned status ' + (converted?.status || 'unknown') + '.');
-  }
-  const records = converted?.records || [];
-  const record = records.find((item) => {
-    const candidateDoi = String(item?.doi || '').replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').trim();
-    return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase() &&
-      typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid);
-  });
+  const record = findMatchingPmcRecord(converted, normalizedDoi);
   if (!record) {
+    if (converted?.status !== 'ok') {
+      throw new Error('PMC ID Converter returned status ' + (converted?.status || 'unknown') + '.');
+    }
     throw new Error('PMC ID Converter returned status ok but no matching DOI record with a PMCID.');
   }
 
