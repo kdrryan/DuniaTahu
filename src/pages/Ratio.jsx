@@ -20,6 +20,7 @@ export default function Ratio() {
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [typingGaze, setTypingGaze] = useState(null);
 
   useEffect(() => {
     if (!current) return;
@@ -87,11 +88,11 @@ export default function Ratio() {
       <div className="mx-auto w-full max-w-2xl px-3.5 pb-14 pt-5 sm:px-6 sm:pt-7">
         <BrandHeader />
 
-        <RatioMascot isTyping={isTyping} isThinking={asking} />
+        <RatioMascot isTyping={isTyping} isThinking={asking} typingGaze={typingGaze} />
 
         <main className="mt-1 space-y-3.5 sm:mt-2 sm:space-y-4">
           <section id="tanya" className="glass scroll-mt-4 rounded-3xl p-3.5 sm:p-4">
-            <AskBox onAsk={ask} loading={asking} onTypingChange={setIsTyping} />
+            <AskBox onAsk={ask} loading={asking} onTypingChange={setIsTyping} onGazeChange={setTypingGaze} />
 
             {error && (
               <p className="mt-3 flex items-center gap-2 rounded-2xl bg-destructive/10 px-3 py-2 text-[12px] font-medium text-destructive">
