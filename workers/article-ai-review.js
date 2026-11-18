@@ -271,6 +271,7 @@ function normalizedEvidenceItems(quality, fullText) {
     normalizeEvidence(item.evidenceExcerpt).length >= 24 &&
     full.includes(normalizeEvidence(item.evidenceExcerpt))
   ).map((item, index) => ({
+    id: 'E' + (index + 1),
     index,
     claim: item.claim,
     evidenceExcerpt: item.evidenceExcerpt,
