@@ -44,6 +44,21 @@ export function reconstructOpenAlexAbstract(index) {
     .join(' ').replace(/\s+/g, ' ').trim().slice(0, 30000);
 }
 
+export function retainEvidenceBackedFindings(value, abstract) {
+  if (!value || !Array.isArray(value.keyFindings) || typeof abstract !== 'string') {
+    return { findings: [], rejectedCount: 0 };
+  }
+  const normalizedAbstract = abstract.replace(/\\s+/g, ' ').toLocaleLowerCase();
+  const findings = value.keyFindings.filter((finding) => {
+    if (!finding || typeof finding.claim !== 'string' || !finding.claim.trim() ||
+        typeof finding.evidenceFromAbstract !== 'string' || !finding.evidenceFromAbstract.trim() ||
+        !['high', 'medium', 'low'].includes(finding.confidence)) return false;
+    const evidence = finding.evidenceFromAbstract.replace(/\\s+/g, ' ').trim().toLocaleLowerCase();
+    return normalizedAbstract.includes(evidence);
+  });
+  return { findings, rejectedCount: value.keyFindings.length - findings.length };
+}
+
 export function validateResearchOutput(value, abstract = '') {
   const errors = [];
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -205,7 +220,7 @@ async function runResearch(request, env) {
     console.error('AI research generation failed.', { name: error && error.name || 'Error' });
     return response({ error: 'AI research could not be completed right now.' }, 502);
   }
-  const validation = validateResearchOutput(research, source.abstract);
+  const evidenceCheck = retainEvidenceBackedFindings(research, source.abstract);\n  research.keyFindings = evidenceCheck.findings;\n  research.rejectedUnsupportedFindingCount = evidenceCheck.rejectedCount;\n  const validation = validateResearchOutput(research, source.abstract);
   if (!validation.valid) {
     console.error('AI research output failed validation.', { errors: validation.errors });
     return response({ error: 'AI research returned an incomplete result.' }, 502);
