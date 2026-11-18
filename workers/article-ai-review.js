@@ -399,8 +399,11 @@ async function publishArticle(db, row, article) {
   };
   await db.batch([
     db.prepare(
-      "UPDATE articles SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE article_id = ? AND status = 'draft'"
-    ).bind(row.article_id),
+      "UPDATE articles SET content_markdown = ?, content_blocks_json = ?, reading_time_minutes = ?, status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE article_id = ? AND status = 'draft'"
+    ).bind(
+      built.contentMarkdown, JSON.stringify(built.contentBlocks),
+      snapshot.readingTimeMinutes, row.article_id
+    ),
     db.prepare(
       'INSERT INTO article_versions (article_id, version_number, snapshot_json, change_reason) SELECT ?, COALESCE(MAX(version_number), 0) + 1, ?, ? FROM article_versions WHERE article_id = ?'
     ).bind(row.article_id, JSON.stringify(snapshot),
