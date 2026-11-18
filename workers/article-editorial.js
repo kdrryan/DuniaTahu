@@ -186,6 +186,23 @@ async function runEditorialDraft(request, env) {
     return response({ error: 'A full-text review for the latest research run is required.' }, 409);
   }
 
+  const priorDraft = await env.DB.prepare(
+    `SELECT a.article_id, a.status FROM article_editorial_generations g
+     JOIN articles a ON a.article_id = g.article_id
+     WHERE g.fulltext_review_id = ? LIMIT 1`
+  ).bind(reviewRow.id).first();
+  if (priorDraft) {
+    if (priorDraft.status !== 'draft') {
+      return response({ error: 'This reviewed source has already been converted into an article record.' }, 409);
+    }
+    return response({
+      articleId: priorDraft.article_id,
+      status: 'draft',
+      editorialStatus: 'pending_human_review',
+      reused: true,
+    });
+  }
+
   let source;
   let research;
   let fullTextSnapshot;
