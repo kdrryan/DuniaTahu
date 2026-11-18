@@ -151,7 +151,8 @@ export function validateQualityOutput(value, fullText = '') {
     if (value.keyClaims.length === 0 && value.qualityDecision === 'pass') {
       errors.push('A passing review must contain at least one evidence-backed claim.');
     }
-    if (value.keyClaims.length === 0 && value.qualityDecision !== 'pass' && value.qualityFlags.length === 0) {
+    if (value.keyClaims.length === 0 && value.qualityDecision !== 'pass' &&
+        (!Array.isArray(value.qualityFlags) || value.qualityFlags.length === 0)) {
       errors.push('A non-passing review without verified claims must explain the evidence failure in qualityFlags.');
     }
   }
