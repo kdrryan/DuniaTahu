@@ -98,35 +98,29 @@ export default function RatioMascot({ isTyping = false, isThinking = false }) {
           </div>
         )}
 
-        <div
-          aria-hidden="true"
-          className="absolute h-32 w-32 rounded-full bg-[#52769A]/8 blur-2xl sm:h-40 sm:w-40"
-        />
-        <div
-          aria-hidden="true"
-          className="ratio-bot-shadow absolute bottom-5 h-3 w-24 rounded-[50%] bg-black/20 blur-[5px] dark:bg-black/45 sm:bottom-6"
-        />
-
         <button
           type="button"
           onClick={handleTap}
           aria-label={lang === 'en' ? 'Say hello to Ratio Bot' : 'Sapa Ratio Bot'}
           aria-disabled={!canTap}
-          className={`ratio-bot-float relative z-10 flex h-32 w-32 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#52769A] sm:h-36 sm:w-36 ${canTap ? 'active:scale-[0.96]' : 'cursor-default'}`}
+          className={`ratio-bot-float relative z-10 flex h-32 w-32 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#52769A] sm:h-36 sm:w-36 ${canTap ? 'active:scale-[0.98]' : 'cursor-default'}`}
         >
-          <span className={`ratio-bot-head relative flex h-full w-full items-center justify-center rounded-full ${isReacting ? 'ratio-bot-reacting' : ''}`}>
-            <span aria-hidden="true" className="ratio-bot-gloss absolute inset-0 rounded-full" />
-            <span className={`ratio-bot-face ratio-bot-face-${expression} relative z-10 flex items-center justify-center gap-[18px]`}>
-              <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
-              <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
-            </span>
-            {expression === 'thinking' && (
-              <span className="ratio-bot-thinking-dots absolute bottom-[25%] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1" aria-label={lang === 'en' ? 'Thinking' : 'Sedang berpikir'}>
+          <span className={`ratio-bot-head relative flex h-full w-full items-center justify-center rounded-full bg-[#050506] ${isReacting ? 'ratio-bot-reacting' : ''}`}>
+            <span className={`ratio-bot-face ratio-bot-face-${expression} relative z-10 flex items-center justify-center`}>
+              <span className="ratio-bot-eyes absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[18px]">
+                <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+                <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+              </span>
+              <span
+                className="ratio-bot-thinking-dots absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5"
+                role="status"
+                aria-label={lang === 'en' ? 'Thinking' : 'Sedang berpikir'}
+              >
                 <i />
                 <i />
                 <i />
               </span>
-            )}
+            </span>
           </span>
         </button>
       </div>
