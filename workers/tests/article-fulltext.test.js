@@ -6,6 +6,7 @@ import {
   retainEvidenceBackedClaims,
   validateQualityOutput,
   downgradeUnverifiedPass,
+  splitFullTextIntoChunks,
 } from '../article-fulltext.js';
 
 const xml = `<?xml version="1.0"?>
@@ -213,4 +214,21 @@ test('does not downgrade a pass that has verified evidence-backed claims', () =>
   };
   const result = downgradeUnverifiedPass(original, 'en');
   assert.equal(result, original);
+});
+
+
+test('splits full text into bounded overlapping segments without gaps', () => {
+  const source = 'a'.repeat(40000);
+  const chunks = splitFullTextIntoChunks(source, 10000, 500);
+  assert.equal(chunks.length, 5);
+  assert.equal(chunks[0].start, 0);
+  assert.equal(chunks[1].start, 9500);
+  assert.ok(chunks[0].text.endsWith(chunks[1].text.slice(0, 500)));
+  assert.equal(chunks.at(-1).start + chunks.at(-1).text.length, source.length);
+});
+
+test('caps segment count to protect Worker runtime and model usage', () => {
+  const chunks = splitFullTextIntoChunks('a'.repeat(200000), 10000, 500);
+  assert.equal(chunks.length, 6);
+  assert.equal(chunks.at(-1).start, 47500);
 });
