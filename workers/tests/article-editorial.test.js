@@ -39,6 +39,14 @@ test('rejects fabricated evidence indexes and missing editorial structure', () =
   assert.ok(result.errors.some((error) => error.includes('sections')));
 });
 
+test('requires every editorial paragraph to carry the source citation marker', () => {
+  const uncited = structuredClone(validOutput);
+  uncited.sections[0].paragraphs[0] = uncited.sections[0].paragraphs[0].replace(/ \\[1\\]$/, '');
+  const result = validateEditorialOutput(uncited, evidence);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.includes('paragraphs')));
+});
+
 test('converts generated sections into markdown and structured article blocks', () => {
   const result = buildEditorialContent(validOutput);
   assert.match(result.contentMarkdown, /^## Why this connection matters/);
