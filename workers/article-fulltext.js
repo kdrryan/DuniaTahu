@@ -168,15 +168,15 @@ async function fetchEuropePmcFullText(doi) {
     const records = search?.resultList?.result || [];
     record = records.find((item) => {
       const candidateDoi = String(item?.doi || '').replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').trim();
-      return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase();
+      return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase() &&
+        typeof item?.pmcid === 'string' && /^PMC\d+$/.test(item.pmcid);
     }) || null;
     if (record) break;
   }
 
   const pmcid = typeof record?.pmcid === 'string' ? record.pmcid : '';
-  const openAccess = record?.isOpenAccess === 'Y' || record?.isOpenAccess === true;
-  if (!/^PMC\d+$/.test(pmcid) || !openAccess) {
-    throw new Error('Europe PMC did not return a matching DOI record with an eligible open-access PMCID.');
+  if (!/^PMC\d+$/.test(pmcid)) {
+    throw new Error('Europe PMC did not return a matching DOI record with a PMCID.');
   }
 
   const xmlUrl = EUROPE_PMC_BASE + '/' + pmcid + '/fullTextXML';
