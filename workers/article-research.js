@@ -220,7 +220,10 @@ async function runResearch(request, env) {
     console.error('AI research generation failed.', { name: error && error.name || 'Error' });
     return response({ error: 'AI research could not be completed right now.' }, 502);
   }
-  const evidenceCheck = retainEvidenceBackedFindings(research, source.abstract);\n  research.keyFindings = evidenceCheck.findings;\n  research.rejectedUnsupportedFindingCount = evidenceCheck.rejectedCount;\n  const validation = validateResearchOutput(research, source.abstract);
+  const evidenceCheck = retainEvidenceBackedFindings(research, source.abstract);
+  research.keyFindings = evidenceCheck.findings;
+  research.rejectedUnsupportedFindingCount = evidenceCheck.rejectedCount;
+  const validation = validateResearchOutput(research, source.abstract);
   if (!validation.valid) {
     console.error('AI research output failed validation.', { errors: validation.errors });
     return response({ error: 'AI research returned an incomplete result.' }, 502);
