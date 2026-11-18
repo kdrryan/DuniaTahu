@@ -9,6 +9,9 @@ import PageNotFound from './lib/PageNotFound';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
+import AppNavigation from '@/components/AppNavigation';
+import Ratio from './pages/Ratio';
+import Saved from './pages/Saved';
 import ArticleLibrary from './pages/ArticleLibrary';
 import ArticleDetail from './pages/ArticleDetail';
 import { checkForUpdate } from '@/lib/appUpdater';
@@ -26,6 +29,7 @@ import {
 
 function App() {
   const [updateInfo, setUpdateInfo] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const updateDialogOpenRef = useRef(false);
 
   useEffect(() => {
@@ -82,12 +86,21 @@ function App() {
         <ScrollToTop />
 
         <LanguageProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/articles" element={<ArticleLibrary />} />
-            <Route path="/articles/:articleId" element={<ArticleDetail />} />
-            <Route path="*" element={<PageNotFound />} />
-          </Routes>
+          <AppNavigation
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}
+          />
+          <div className={sidebarCollapsed ? 'md:pl-14' : 'md:pl-[232px]'}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/ratio" element={<Ratio />} />
+              <Route path="/explore" element={<ArticleLibrary />} />
+              <Route path="/saved" element={<Saved />} />
+              <Route path="/articles" element={<ArticleLibrary />} />
+              <Route path="/articles/:articleId" element={<ArticleDetail />} />
+              <Route path="*" element={<PageNotFound />} />
+            </Routes>
+          </div>
         </LanguageProvider>
 
         <AlertDialog
