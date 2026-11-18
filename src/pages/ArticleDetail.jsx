@@ -568,7 +568,6 @@ export default function ArticleDetail() {
         >
           <button
             type="button"
-            onPointerDown={(event) => event.preventDefault()}
             onClick={handleAskRatio}
             className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-xs font-semibold shadow-lg"
             style={{ background: colors.surface, color: colors.text, borderColor: colors.line }}
