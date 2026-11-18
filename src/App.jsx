@@ -9,6 +9,8 @@ import PageNotFound from './lib/PageNotFound';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
+import ArticleLibrary from './pages/ArticleLibrary';
+import ArticleDetail from './pages/ArticleDetail';
 import { checkForUpdate } from '@/lib/appUpdater';
 
 import {
@@ -82,6 +84,8 @@ function App() {
         <LanguageProvider>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/articles" element={<ArticleLibrary />} />
+            <Route path="/articles/:articleId" element={<ArticleDetail />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </LanguageProvider>
