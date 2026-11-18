@@ -17,7 +17,54 @@ const SUGGESTIONS = {
   ],
 };
 
-export default function AskBox({ onAsk, loading, onTypingChange }) {
+const getCaretGaze = (textarea) => {
+  if (!textarea || typeof window === 'undefined') return { x: 0, y: 1 };
+
+  const computed = window.getComputedStyle(textarea);
+  const mirror = document.createElement('div');
+  const marker = document.createElement('span');
+  const styles = [
+    'boxSizing', 'width', 'padding', 'border', 'fontFamily', 'fontSize',
+    'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight', 'textAlign',
+    'textIndent', 'textTransform', 'wordBreak', 'overflowWrap',
+  ];
+
+  mirror.style.position = 'fixed';
+  mirror.style.visibility = 'hidden';
+  mirror.style.left = '-10000px';
+  mirror.style.top = '-10000px';
+  mirror.style.whiteSpace = 'pre-wrap';
+  mirror.style.overflowWrap = 'break-word';
+  mirror.style.wordWrap = 'break-word';
+  styles.forEach((property) => {
+    mirror.style[property] = computed[property];
+  });
+  mirror.style.height = 'auto';
+  mirror.style.minHeight = '0';
+  mirror.style.overflow = 'visible';
+
+  const cursor = textarea.selectionStart ?? textarea.value.length;
+  mirror.textContent = textarea.value.slice(0, cursor);
+  marker.textContent = '\u200b';
+  marker.style.display = 'inline-block';
+  marker.style.width = '1px';
+  marker.style.height = computed.lineHeight === 'normal' ? computed.fontSize : computed.lineHeight;
+  mirror.appendChild(marker);
+  document.body.appendChild(mirror);
+
+  const markerRect = marker.getBoundingClientRect();
+  const inputRect = textarea.getBoundingClientRect();
+  const x = ((markerRect.left - inputRect.left) / Math.max(inputRect.width, 1)) * 2 - 1;
+  const y = (markerRect.top + markerRect.height / 2 - inputRect.top) / Math.max(inputRect.height, 1);
+  mirror.remove();
+
+  return {
+    x: Math.max(-1, Math.min(1, x)),
+    y: Math.max(0, Math.min(1, y)),
+  };
+};
+
+export default function AskBox({ onAsk, loading, onTypingChange, onGazeChange }) {
   const { lang, t } = useLanguage();
   const [value, setValue] = useState('');
   const suggestions = SUGGESTIONS[lang] || SUGGESTIONS.id;
@@ -29,6 +76,7 @@ export default function AskBox({ onAsk, loading, onTypingChange }) {
     onAsk(question);
     setValue('');
     onTypingChange?.(false);
+    onGazeChange?.(null);
   };
 
   const handleKeyDown = (event) => {
@@ -48,9 +96,18 @@ export default function AskBox({ onAsk, loading, onTypingChange }) {
               const nextValue = event.target.value;
               setValue(nextValue);
               onTypingChange?.(Boolean(nextValue.trim()));
+              window.requestAnimationFrame(() => onGazeChange?.(getCaretGaze(event.target)));
             }}
-            onFocus={() => onTypingChange?.(Boolean(value.trim()))}
-            onBlur={() => onTypingChange?.(false)}
+            onFocus={(event) => {
+              onTypingChange?.(true);
+              onGazeChange?.(getCaretGaze(event.target));
+            }}
+            onClick={(event) => onGazeChange?.(getCaretGaze(event.target))}
+            onKeyUp={(event) => onGazeChange?.(getCaretGaze(event.target))}
+            onBlur={() => {
+              onTypingChange?.(false);
+              onGazeChange?.(null);
+            }}
             onKeyDown={handleKeyDown}
             rows={2}
             maxLength={300}
