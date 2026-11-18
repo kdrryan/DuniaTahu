@@ -40,7 +40,7 @@ export default function SettingsButton() {
         <div
           role="dialog"
           aria-label={t('settings.title')}
-          className="glass absolute right-0 top-11 z-50 w-60 rounded-3xl p-3"
+          className="glass absolute right-0 top-11 z-50 w-[min(15rem,calc(100vw-2rem))] rounded-3xl p-3"
         >
           <div className="flex items-center justify-between gap-2 px-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
