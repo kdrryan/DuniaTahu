@@ -363,9 +363,60 @@ async function runEditorialDraft(request, env) {
   }, 201);
 }
 
+
+async function getEditorialDraft(request, env) {
+  if (!env.ARTICLE_ADMIN_TOKEN) return response({ error: 'Article management is not configured.' }, 503);
+  const authorization = request.headers.get('Authorization') || '';
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+  if (!(await tokenMatches(token, env.ARTICLE_ADMIN_TOKEN))) return response({ error: 'Unauthorized.' }, 401);
+  if (!env.DB) return response({ error: 'Article library is unavailable.' }, 503);
+
+  const articleId = new URL(request.url).searchParams.get('articleId') || '';
+  if (!/^[A-Z]\\d{3,}-\\d{2}$/.test(articleId)) {
+    return response({ error: 'A valid article ID is required.' }, 400);
+  }
+  const row = await env.DB.prepare(
+    `SELECT a.article_id, a.slug, a.category_code, a.language, a.title, a.summary,
+      a.content_markdown, a.content_blocks_json, a.reading_time_minutes, a.status,
+      g.research_run_id, g.fulltext_review_id, g.model, g.prompt_version,
+      g.evidence_map_json, g.editorial_note, g.created_at AS generated_at
+     FROM articles a
+     JOIN article_editorial_generations g ON g.article_id = a.article_id
+     WHERE a.article_id = ? AND a.status = 'draft'`
+  ).bind(articleId).first();
+  if (!row) return response({ error: 'Editorial draft not found.' }, 404);
+
+  const sources = await env.DB.prepare(
+    `SELECT s.display_name, a.source_url, a.source_title, a.citation_note
+     FROM article_sources a JOIN sources s ON s.source_key = a.source_key
+     WHERE a.article_id = ? ORDER BY a.is_primary DESC`
+  ).bind(articleId).all();
+
+  let contentBlocks = [];
+  let evidenceMap = [];
+  try { contentBlocks = JSON.parse(row.content_blocks_json); } catch { contentBlocks = []; }
+  try { evidenceMap = JSON.parse(row.evidence_map_json); } catch { evidenceMap = []; }
+  return response({
+    article: {
+      id: row.article_id, slug: row.slug, categoryCode: row.category_code,
+      language: row.language, title: row.title, summary: row.summary,
+      contentMarkdown: row.content_markdown, contentBlocks,
+      readingTimeMinutes: row.reading_time_minutes, status: row.status,
+      sources: sources.results || [],
+    },
+    editorial: {
+      status: 'pending_human_review', researchId: row.research_run_id,
+      fullTextReviewId: row.fulltext_review_id, model: row.model,
+      promptVersion: row.prompt_version, evidenceMap, editorialNote: row.editorial_note,
+      generatedAt: row.generated_at,
+    },
+  });
+}
+
 export async function handleEditorialDraftRequest(request, env) {
   const url = new URL(request.url);
   if (url.pathname !== '/api/admin/sources/openalex/editorial-draft') return null;
   if (request.method === 'POST') return runEditorialDraft(request, env);
+  if (request.method === 'GET') return getEditorialDraft(request, env);
   return response({ error: 'Method not allowed.' }, 405);
 }
