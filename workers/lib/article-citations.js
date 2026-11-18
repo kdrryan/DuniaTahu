@@ -1,8 +1,8 @@
 export function normalizeCitationText(value) {
   if (typeof value !== 'string') return value;
   const withoutNumericMarkers = value
-    .replace(/\\s*\\[\\d+\\]/g, '')
-    .replace(/[ \\t]{2,}/g, ' ')
+    .replace(/\s*\[\d+\]/g, '')
+    .replace(/[ \t]{2,}/g, ' ')
     .trim();
   return withoutNumericMarkers ? withoutNumericMarkers + ' [1]' : withoutNumericMarkers;
 }
@@ -24,5 +24,5 @@ export function markdownFromContentBlocks(blocks) {
       lines.push(normalizeCitationText(String(block.content || '')));
     }
   }
-  return lines.join('\\n\\n').trim();
+  return lines.join('\n\n').trim();
 }
