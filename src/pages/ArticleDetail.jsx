@@ -5,7 +5,6 @@ import {
   Bookmark,
   BookmarkCheck,
   Check,
-  ChevronDown,
   Clock3,
   ExternalLink,
   List,
