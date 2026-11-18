@@ -278,7 +278,7 @@ export default function ArticleDetail() {
                 <Type className="h-[18px] w-[18px]" />
               </IconButton>
               {showTypeControls && (
-                <div className="fixed right-4 top-[4.25rem] z-50 w-[min(14rem,calc(100vw-2rem))] rounded-2xl border p-4 shadow-xl sm:absolute sm:right-0 sm:top-12" style={{ background: colors.surface, borderColor: colors.line }}>
+                <div className="fixed right-4 top-[4.25rem] z-50 w-[min(14rem,calc(100vw_-_2rem))] rounded-2xl border p-4 shadow-xl sm:absolute sm:right-0 sm:top-12" style={{ background: colors.surface, borderColor: colors.line }}>
                   <p className="text-xs font-semibold" style={{ color: colors.muted }}>{isId ? 'Ukuran teks' : 'Text size'}</p>
                   <div className="mt-3 flex items-center justify-between gap-3">
                     <button
@@ -313,7 +313,7 @@ export default function ArticleDetail() {
                 <List className="h-[18px] w-[18px]" />
               </IconButton>
               {showContents && (
-                <div className="fixed right-4 top-[4.25rem] z-50 w-[min(18.75rem,calc(100vw-2rem))] rounded-2xl border p-3 shadow-xl sm:absolute sm:right-0 sm:top-12" style={{ background: colors.surface, borderColor: colors.line }}>
+                <div className="fixed right-4 top-[4.25rem] z-50 w-[min(18.75rem,calc(100vw_-_2rem))] rounded-2xl border p-3 shadow-xl sm:absolute sm:right-0 sm:top-12" style={{ background: colors.surface, borderColor: colors.line }}>
                   <p className="px-2 py-1 text-xs font-semibold" style={{ color: colors.muted }}>{isId ? 'Di dalam artikel ini' : 'In this article'}</p>
                   <div className="mt-1 max-h-[55vh] overflow-y-auto">
                     {headings.map((heading, index) => (
