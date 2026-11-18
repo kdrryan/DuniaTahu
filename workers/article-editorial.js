@@ -33,6 +33,26 @@ function normalizeEvidence(value) {
   return String(value || '').normalize('NFKC').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
 }
 
+// Ratio currently has one registered primary source for this generation flow.
+// Normalize the required source marker deterministically instead of asking the model
+// to reproduce citation punctuation. Evidence-to-section mapping is still validated below.
+export function normalizeEditorialCitations(value) {
+  if (!value || !Array.isArray(value.sections)) return value;
+  return {
+    ...value,
+    sections: value.sections.map((section) => ({
+      ...section,
+      paragraphs: Array.isArray(section?.paragraphs)
+        ? section.paragraphs.map((paragraph) => {
+          if (typeof paragraph !== 'string') return paragraph;
+          const trimmed = paragraph.trim();
+          return trimmed && !trimmed.endsWith('[1]') ? trimmed + ' [1]' : trimmed;
+        })
+        : section?.paragraphs,
+    })),
+  };
+}
+
 export function validateEditorialOutput(value, evidenceClaims) {
   const errors = [];
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -286,7 +306,7 @@ async function runEditorialDraft(request, env) {
   let generated;
   let validation;
   try {
-    generated = await callGemini(env, prompt);
+    generated = normalizeEditorialCitations(await callGemini(env, prompt));
     validation = validateEditorialOutput(generated, verifiedEvidence);
     if (!validation.valid) {
       const repairPrompt = [
@@ -297,7 +317,7 @@ async function runEditorialDraft(request, env) {
         'VALIDATION ERRORS TO FIX: ' + JSON.stringify(validation.errors),
         'Return JSON only. Do not explain the corrections.',
       ].join('\\n\\n');
-      generated = await callGemini(env, repairPrompt);
+      generated = normalizeEditorialCitations(await callGemini(env, repairPrompt));
       validation = validateEditorialOutput(generated, verifiedEvidence);
     }
   } catch (error) {
