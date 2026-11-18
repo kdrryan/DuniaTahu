@@ -1,8 +1,9 @@
 import { formatArticleId } from './lib/article-id.js';
 import { runAutomatedArticleReview } from './article-ai-review.js';
+import { normalizeCitationText } from './lib/article-citations.js';
 const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const PROMPT_VERSION = 'ratio-editorial-v1';
+const PROMPT_VERSION = 'ratio-editorial-v2-citation-normalization';
 
 function response(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -44,11 +45,8 @@ export function normalizeEditorialCitations(value) {
     sections: value.sections.map((section) => ({
       ...section,
       paragraphs: Array.isArray(section?.paragraphs)
-        ? section.paragraphs.map((paragraph) => {
-          if (typeof paragraph !== 'string') return paragraph;
-          const trimmed = paragraph.trim();
-          return trimmed && !trimmed.endsWith('[1]') ? trimmed + ' [1]' : trimmed;
-        })
+        ? section.paragraphs.map((paragraph) =>
+          typeof paragraph === 'string' ? normalizeCitationText(paragraph) : paragraph)
         : section?.paragraphs,
     })),
   };
@@ -317,7 +315,7 @@ async function runEditorialDraft(request, env) {
     'Do not copy source sentences. Paraphrase in original language. Never include long quotations.',
     'Distinguish the review authors’ conclusions from established scientific consensus. Describe this source as a systematic descriptive review, not a meta-analysis. Preserve the stated limitation that it did not conduct a meta-analysis.',
     'Explain scope and limitations fairly. Do not turn population-level findings into claims about every individual. Avoid medical advice, diagnosis, or treatment recommendations.',
-    'Create exactly 5 coherent sections. EVERY section must contain 2 paragraphs. Every paragraph must be a plain-text string of 60–900 characters, must be substantive (not a heading, note, or placeholder), and MUST end with the exact characters [1]. This citation marker is mandatory at the end of every paragraph, including introductory and concluding paragraphs.',
+    'Create exactly 5 coherent sections. EVERY section must contain 2 paragraphs. Every paragraph must be a plain-text string of 60–900 characters, must be substantive (not a heading, note, or placeholder), and MUST end with the exact characters [1]. This citation marker is mandatory at the end of every paragraph, including introductory and concluding paragraphs. Use only this single source marker. Do not output any other numeric citation markers such as [0], [2], or [9]; the server will normalize paragraph citations.',
     'Create 3–6 verifiedClaims. Each must identify the index of one supplied evidence item and the section where the claim is discussed. Do not invent evidence or rewrite the evidence excerpts.',
     'Return JSON exactly shaped as: {"title":"...","summary":"...","sections":[{"heading":"...","paragraphs":["..."]}],"verifiedClaims":[{"claim":"...","evidenceIndex":0,"sectionIndex":0}],"editorialNote":"..."}',
     'EDITORIAL SOURCE METADATA: ' + JSON.stringify({
