@@ -4,10 +4,17 @@ import { useLanguage } from '@/lib/LanguageContext';
 
 function RatioMark() {
   return (
-    <>
-      <img src="/brand/ratio-orbit-black-black-dot-light-background.png" alt="" aria-hidden="true" className="block h-6 w-6 shrink-0 rounded-md object-contain dark:hidden" draggable="false" />
-      <img src="/brand/ratio-orbit-white-white-dot-dark-background.png" alt="" aria-hidden="true" className="hidden h-6 w-6 shrink-0 rounded-md object-contain dark:block" draggable="false" />
-    </>
+    <span
+      aria-hidden="true"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-transparent p-0 dark:bg-white dark:p-px"
+    >
+      <img
+        src="/brand/ratiobot-mark.svg"
+        alt=""
+        draggable="false"
+        className="block h-full w-full select-none"
+      />
+    </span>
   );
 }
 
