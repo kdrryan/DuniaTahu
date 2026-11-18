@@ -22,7 +22,7 @@ const GREETINGS = {
   ],
 };
 
-export default function RatioMascot({ isTyping = false, isThinking = false }) {
+export default function RatioMascot({ isTyping = false, isThinking = false, typingGaze = null }) {
   const { lang } = useLanguage();
   const [bubble, setBubble] = useState(null);
   const [canTap, setCanTap] = useState(true);
@@ -33,12 +33,49 @@ export default function RatioMascot({ isTyping = false, isThinking = false }) {
   const reactionTimer = useRef(null);
   const lastTap = useRef(0);
   const lastGreeting = useRef(-1);
+  const headRef = useRef(null);
+  const gazeResetTimer = useRef(null);
+  const [screenGaze, setScreenGaze] = useState(null);
 
   useEffect(() => () => {
     window.clearTimeout(bubbleTimer.current);
     window.clearTimeout(cooldownTimer.current);
     window.clearTimeout(reactionTimer.current);
+    window.clearTimeout(gazeResetTimer.current);
   }, []);
+
+  useEffect(() => {
+    if (isTyping || isThinking) return undefined;
+
+    const updateGaze = (clientX, clientY) => {
+      const rect = headRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const x = Math.max(-1, Math.min(1, (clientX - centerX) / (rect.width * 0.85)));
+      const y = Math.max(-1, Math.min(1, (clientY - centerY) / (rect.height * 0.85)));
+
+      setScreenGaze({ x, y });
+      window.clearTimeout(gazeResetTimer.current);
+      gazeResetTimer.current = window.setTimeout(() => setScreenGaze(null), 1800);
+    };
+
+    const onPointerDown = (event) => updateGaze(event.clientX, event.clientY);
+    const onPointerMove = (event) => {
+      if (event.pointerType === 'mouse' && event.buttons === 0) {
+        updateGaze(event.clientX, event.clientY);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('pointermove', onPointerMove, { passive: true });
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('pointermove', onPointerMove);
+      window.clearTimeout(gazeResetTimer.current);
+    };
+  }, [isThinking, isTyping]);
 
   const handleTap = () => {
     const now = Date.now();
@@ -105,9 +142,18 @@ export default function RatioMascot({ isTyping = false, isThinking = false }) {
           aria-disabled={!canTap}
           className={`ratio-bot-float relative z-10 flex h-32 w-32 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#52769A] sm:h-36 sm:w-36 ${canTap ? 'active:scale-[0.98]' : 'cursor-default'}`}
         >
-          <span className={`ratio-bot-head relative flex h-full w-full items-center justify-center rounded-full bg-[#050506] ${isReacting ? 'ratio-bot-reacting' : ''}`}>
+          <span
+            ref={headRef}
+            className={`ratio-bot-head relative flex h-full w-full items-center justify-center rounded-full bg-[#050506] ${isReacting ? 'ratio-bot-reacting' : ''}`}
+          >
             <span className={`ratio-bot-face ratio-bot-face-${expression} relative z-10 flex items-center justify-center`}>
-              <span className="ratio-bot-eyes absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[18px]">
+              <span
+                className={`ratio-bot-eyes absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[18px] ${isTyping ? 'ratio-bot-eyes-tracking' : screenGaze ? 'ratio-bot-eyes-tracking' : 'ratio-bot-eyes-idle'}`}
+                style={{
+                  '--gaze-x': `${(isTyping ? (typingGaze?.x ?? 0) : (screenGaze?.x ?? 0)) * 7}px`,
+                  '--gaze-y': `${isTyping ? 4 + (typingGaze?.y ?? 0.5) * 5 : (screenGaze?.y ?? 0) * 6}px`,
+                }}
+              >
                 <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
                 <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
               </span>
