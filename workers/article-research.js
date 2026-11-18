@@ -44,7 +44,7 @@ export function reconstructOpenAlexAbstract(index) {
     .join(' ').replace(/\s+/g, ' ').trim().slice(0, 30000);
 }
 
-export function validateResearchOutput(value) {
+export function validateResearchOutput(value, abstract = '') {
   const errors = [];
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return { valid: false, errors: ['Research output must be an object.'] };
@@ -62,6 +62,14 @@ export function validateResearchOutput(value) {
       }
       if (!finding || typeof finding.evidenceFromAbstract !== 'string' || !finding.evidenceFromAbstract.trim()) {
         errors.push('keyFindings[' + index + '].evidenceFromAbstract is required.');
+      }
+      if (finding && typeof abstract === 'string' && abstract &&
+          typeof finding.evidenceFromAbstract === 'string' && finding.evidenceFromAbstract.trim()) {
+        const normalizedAbstract = abstract.replace(/\\s+/g, ' ').toLocaleLowerCase();
+        const normalizedEvidence = finding.evidenceFromAbstract.replace(/\\s+/g, ' ').trim().toLocaleLowerCase();
+        if (!normalizedAbstract.includes(normalizedEvidence)) {
+          errors.push('keyFindings[' + index + '].evidenceFromAbstract is not present in the source abstract.');
+        }
       }
       if (!finding || !['high', 'medium', 'low'].includes(finding.confidence)) {
         errors.push('keyFindings[' + index + '].confidence is invalid.');
@@ -197,7 +205,7 @@ async function runResearch(request, env) {
     console.error('AI research generation failed.', { name: error && error.name || 'Error' });
     return response({ error: 'AI research could not be completed right now.' }, 502);
   }
-  const validation = validateResearchOutput(research);
+  const validation = validateResearchOutput(research, source.abstract);
   if (!validation.valid) {
     console.error('AI research output failed validation.', { errors: validation.errors });
     return response({ error: 'AI research returned an incomplete result.' }, 502);
