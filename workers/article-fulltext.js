@@ -1,6 +1,9 @@
 const EUROPE_PMC_BASE = 'https://www.ebi.ac.uk/europepmc/webservices/rest';
 const GEMINI_MODEL = 'gemini-3.5-flash-lite';
-const MAX_FULL_TEXT_CHARS = 50000;
+const MAX_FULL_TEXT_CHARS = 100000;
+const FULL_TEXT_CHUNK_CHARS = 18000;
+const FULL_TEXT_CHUNK_OVERLAP = 500;
+const MAX_FULL_TEXT_CHUNKS = 6;
 
 function response(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -249,25 +252,7 @@ async function fetchEuropePmcFullText(doi) {
   }
 }
 
-async function generateQualityReview(env, source, research, fullText, language) {
-  if (!env.GEMINI_API_KEY) throw new Error('AI quality review is not configured.');
-  const prompt = [
-    'You are Ratio Research Quality Reviewer. Assess the full article text against the prior abstract-only research summary.',
-    'Use only the supplied article text and prior research JSON. Do not add outside facts or invented methods, findings, citations, or page numbers.',
-    'Treat the article authors\' statements as claims to assess, not as automatically proven facts.',
-    'Check whether the prior research summary accurately represents the full article, whether methods and evidence support its claims, and what limitations or contradictions matter.',
-    'Return between 1 and 5 keyClaims only when you can support each one with an exact, contiguous quotation copied character-for-character from the supplied full text. Each evidenceExcerpt must be 24 to 120 characters; do not paraphrase, translate, repair grammar, add ellipses, or combine separate passages.',
-    'Before returning JSON, verify every evidenceExcerpt by locating that exact text in the supplied full text. If no claim can be verified exactly, return keyClaims as an empty array, set qualityDecision to needs_revision or reject (never pass), and explain the evidence problem in qualityFlags.',
-    'qualityFlags must be an array. Use an empty array only when no material quality flags were identified; otherwise provide concise, specific flags. Do not invent a flag merely to fill the array.',
-    'Do not reproduce long passages. Keep evidence excerpts short. Do not provide medical advice.',
-    language === 'en' ? 'Write explanatory fields in clear English.' : 'Tulis semua penjelasan dalam Bahasa Indonesia yang jelas.',
-    'Set qualityDecision to pass only when the source is sufficiently clear, the prior research is materially supported, and no critical unresolved issue remains. Otherwise use needs_revision or reject.',
-    'editorialReadiness may be true only when qualityDecision is pass. A pass is not publication approval.',
-    'Return JSON with: overallAssessment, researchQuestionAlignment, methodologyAssessment, evidenceAssessment, keyClaims[{claim,evidenceExcerpt,assessment}], limitations[], qualityFlags[], recommendations[], qualityDecision(pass|needs_revision|reject), editorialReadiness(boolean).',
-    'SOURCE: ' + JSON.stringify({ title: source.title, doi: source.doi, pmcid: fullText.pmcid, license: fullText.license }),
-    'ABSTRACT-ONLY RESEARCH: ' + JSON.stringify(research),
-    'FULL ARTICLE TEXT:', fullText.text,
-  ].join('\n\n');
+async function callGeminiJson(env, prompt, label, maxOutputTokens = 4096) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 55000);
   try {
@@ -278,20 +263,90 @@ async function generateQualityReview(env, source, research, fullText, language) 
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: 'Be rigorous, transparent, evidence-bound, and conservative. Return valid JSON only.' }] },
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 4096, responseMimeType: 'application/json', temperature: 0.1 },
+        generationConfig: { maxOutputTokens, responseMimeType: 'application/json', temperature: 0.1 },
       }),
       signal: controller.signal,
     });
     const body = await upstream.json().catch(() => null);
-    if (!upstream.ok) throw new Error('Gemini quality review returned HTTP ' + upstream.status + '.');
-    const content = body?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
-    if (!content) throw new Error('Gemini quality review returned no content.');
-    return JSON.parse(content.replace(/^\uFEFF/, '').trim());
+    if (!upstream.ok) throw new Error(label + ' returned HTTP ' + upstream.status + '.');
+    const result = body?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
+    if (!result) throw new Error(label + ' returned no content.');
+    return JSON.parse(result.replace(/^\\uFEFF/, '').trim());
   } finally {
     clearTimeout(timeout);
   }
 }
 
+export function splitFullTextIntoChunks(text, chunkSize = FULL_TEXT_CHUNK_CHARS, overlap = FULL_TEXT_CHUNK_OVERLAP) {
+  if (typeof text !== 'string' || !text.trim() || !Number.isInteger(chunkSize) ||
+      !Number.isInteger(overlap) || chunkSize <= 0 || overlap < 0 || overlap >= chunkSize) return [];
+  const chunks = [];
+  for (let start = 0; start < text.length && chunks.length < MAX_FULL_TEXT_CHUNKS; start += chunkSize - overlap) {
+    chunks.push({ index: chunks.length + 1, start, text: text.slice(start, start + chunkSize) });
+  }
+  return chunks;
+}
+
+async function generateQualityReview(env, source, research, fullText, language) {
+  if (!env.GEMINI_API_KEY) throw new Error('AI quality review is not configured.');
+  const chunks = splitFullTextIntoChunks(fullText.text);
+  if (!chunks.length) throw new Error('No full-text chunks are available for review.');
+  const chunkReviews = [];
+  for (const chunk of chunks) {
+    const prompt = [
+      'You are Ratio Research Quality Reviewer. Review only this segment of a licensed research article in relation to the abstract-only research summary.',
+      'Use only the supplied segment and research JSON. Do not add outside facts, invented methods, findings, citations, or page numbers.',
+      'Return 0 to 3 keyClaims only when each has an exact, contiguous evidenceExcerpt copied character-for-character from this segment. Excerpt length must be 24 to 120 characters.',
+      'Do not paraphrase, translate, repair grammar, add ellipses, or combine separate passages. Verify each excerpt against this segment before returning it.',
+      'If no claim is verifiable in this segment, return an empty keyClaims array. This is not by itself a quality failure; other segments may contain evidence.',
+      'Return JSON with chunkAssessment, keyClaims[{claim,evidenceExcerpt,assessment}], limitations[], qualityFlags[], recommendations[]. All arrays must be present.',
+      language === 'en' ? 'Write in clear English.' : 'Tulis dalam Bahasa Indonesia yang jelas.',
+      'SOURCE: ' + JSON.stringify({ title: source.title, doi: source.doi, pmcid: fullText.pmcid }),
+      'ABSTRACT-ONLY RESEARCH: ' + JSON.stringify(research),
+      'SEGMENT ' + chunk.index + ' OF ' + chunks.length + ' (character offset ' + chunk.start + '):',
+      chunk.text,
+    ].join('\\n\\n');
+    const result = await callGeminiJson(env, prompt, 'Gemini segment review');
+    if (!result || typeof result.chunkAssessment !== 'string' || !Array.isArray(result.keyClaims) ||
+        !Array.isArray(result.limitations) || !Array.isArray(result.qualityFlags) ||
+        !Array.isArray(result.recommendations)) {
+      throw new Error('Gemini returned an invalid segment review structure.');
+    }
+    chunkReviews.push(result);
+  }
+
+  const collectedClaims = chunkReviews.flatMap((item) => item.keyClaims);
+  const verified = retainEvidenceBackedClaims({ keyClaims: collectedClaims }, fullText.text);
+  const compactReviews = chunkReviews.map((item, index) => ({
+    segment: index + 1,
+    assessment: item.chunkAssessment,
+    verifiedClaims: item.keyClaims.filter((claim) => verified.claims.includes(claim)),
+    limitations: item.limitations,
+    qualityFlags: item.qualityFlags,
+    recommendations: item.recommendations,
+  }));
+  const aggregatePrompt = [
+    'You are Ratio Research Quality Reviewer. Produce one conservative editorial quality assessment using the segment assessments and the prior abstract-only research summary.',
+    'Do not invent facts. The verifiedClaims supplied below already have evidence excerpts checked against the full article. Do not rewrite their evidenceExcerpt values.',
+    'Assess whether the abstract-only research materially represents the article, whether methodology and evidence are adequately described, and what limitations or contradictions remain.',
+    'If the retrieved full text was truncated, the review must not pass and must explicitly flag that only a partial text was reviewed.',
+    'A pass requires adequate support and no critical unresolved issue. editorialReadiness can be true only for pass.',
+    'Return JSON with overallAssessment, researchQuestionAlignment, methodologyAssessment, evidenceAssessment, limitations[], qualityFlags[], recommendations[], qualityDecision(pass|needs_revision|reject), editorialReadiness(boolean).',
+    language === 'en' ? 'Write explanatory fields in clear English.' : 'Tulis semua penjelasan dalam Bahasa Indonesia yang jelas.',
+    'SOURCE: ' + JSON.stringify({ title: source.title, doi: source.doi, pmcid: fullText.pmcid, license: fullText.license, truncated: fullText.truncated, reviewedCharacters: fullText.characterCount }),
+    'ABSTRACT-ONLY RESEARCH: ' + JSON.stringify(research),
+    'SEGMENT REVIEW RESULTS: ' + JSON.stringify(compactReviews),
+  ].join('\\n\\n');
+  const aggregate = await callGeminiJson(env, aggregatePrompt, 'Gemini aggregate quality review');
+  return {
+    ...aggregate,
+    keyClaims: verified.claims,
+    rejectedUnsupportedClaimCount: verified.rejectedCount,
+    reviewedChunkCount: chunks.length,
+    reviewedCharacterCount: fullText.text.length,
+    truncated: fullText.truncated,
+  };
+}
 async function runFullTextReview(request, env) {
   if (!env.ARTICLE_ADMIN_TOKEN) return response({ error: 'Article management is not configured.' }, 503);
   const authorization = request.headers.get('Authorization') || '';
