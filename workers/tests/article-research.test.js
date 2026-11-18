@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { reconstructOpenAlexAbstract, validateResearchOutput } from '../article-research.js';
+import { reconstructOpenAlexAbstract, validateResearchOutput, retainEvidenceBackedFindings } from '../article-research.js';
 
 test('reconstructs OpenAlex inverted abstracts in word order', () => {
   assert.equal(reconstructOpenAlexAbstract({
@@ -52,4 +52,25 @@ test('rejects evidence excerpts that do not occur in the source abstract', () =>
   }, 'The actual source abstract contains different words.');
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.includes('not present in the source abstract')));
+});
+
+test('keeps only findings whose evidence is an exact excerpt from the abstract', () => {
+  const result = retainEvidenceBackedFindings({
+    keyFindings: [
+      { claim: 'Supported claim', evidenceFromAbstract: 'climate change affects health', confidence: 'high' },
+      { claim: 'Unsupported claim', evidenceFromAbstract: 'invented result', confidence: 'high' },
+      { claim: 'Malformed claim', evidenceFromAbstract: '', confidence: 'medium' },
+    ],
+  }, 'The review says climate change affects health in many populations.');
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].claim, 'Supported claim');
+  assert.equal(result.rejectedCount, 2);
+});
+
+test('does not keep any finding when none has source evidence', () => {
+  const result = retainEvidenceBackedFindings({
+    keyFindings: [{ claim: 'Unsupported', evidenceFromAbstract: 'not present', confidence: 'low' }],
+  }, 'Only the original source text is trusted.');
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.rejectedCount, 1);
 });
