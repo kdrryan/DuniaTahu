@@ -274,17 +274,33 @@ async function runEditorialDraft(request, env) {
   ].join('\n\n');
 
   let generated;
+  let validation;
   try {
     generated = await callGemini(env, prompt);
+    validation = validateEditorialOutput(generated, verifiedEvidence);
+    if (!validation.valid) {
+      const repairPrompt = [
+        prompt,
+        'IMPORTANT: Your previous JSON response failed validation. Regenerate the complete article from scratch and correct every issue listed here.',
+        'Each section must have a heading and between 1 and 3 substantive paragraphs. Each paragraph must be at least 40 characters, no more than 1800 characters, and end exactly with [1].',
+        'Return all required top-level fields. Include 4–6 sections and 3–6 verifiedClaims. Use only valid evidence indexes and valid section indexes.',
+        'VALIDATION ERRORS TO FIX: ' + JSON.stringify(validation.errors),
+        'Return JSON only. Do not explain the corrections.',
+      ].join('\\n\\n');
+      generated = await callGemini(env, repairPrompt);
+      validation = validateEditorialOutput(generated, verifiedEvidence);
+    }
   } catch (error) {
     console.error('Editorial draft generation failed.', { name: error?.name || 'Error' });
     return response({ error: 'The editorial draft could not be generated right now.' }, 502);
   }
 
-  const validation = validateEditorialOutput(generated, verifiedEvidence);
   if (!validation.valid) {
-    console.error('Editorial draft failed validation.', { errors: validation.errors });
-    return response({ error: 'The generated editorial draft did not pass structural and evidence validation.', details: validation.errors }, 502);
+    console.error('Editorial draft failed validation after one repair attempt.', { errors: validation.errors });
+    return response({
+      error: 'The editorial draft still did not meet Ratio editorial requirements after an automatic correction attempt.',
+      details: validation.errors,
+    }, 502);
   }
 
   const { contentMarkdown, contentBlocks } = buildEditorialContent(generated);
