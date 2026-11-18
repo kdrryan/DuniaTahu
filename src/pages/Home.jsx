@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, BookOpen, Clock3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import BrandHeader from '@/components/BrandHeader';
 import FunFactCard from '@/components/FunFactCard';
 import AskBox from '@/components/AskBox';
 import AnswerCard from '@/components/AnswerCard';
 import HistoryList from '@/components/HistoryList';
-import { fetchDailyFact, askWorld } from '@/lib/api';
+import { fetchDailyFact, askWorld, fetchArticles } from '@/lib/api';
 import { loadHistory, saveHistory } from '@/lib/history';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -17,6 +18,7 @@ export default function Home() {
   const [current, setCurrent] = useState(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
+  const [featuredArticle, setFeaturedArticle] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -50,6 +52,18 @@ export default function Home() {
     return () => {
       alive = false;
     };
+  }, [lang]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchArticles(lang, 1)
+      .then((articles) => {
+        if (alive) setFeaturedArticle(articles[0] || null);
+      })
+      .catch(() => {
+        if (alive) setFeaturedArticle(null);
+      });
+    return () => { alive = false; };
   }, [lang]);
 
   useEffect(() => {
@@ -117,6 +131,33 @@ export default function Home() {
 
       <div className="mx-auto w-full max-w-2xl px-3.5 pb-14 pt-5 sm:px-6 sm:pt-7">
         <BrandHeader />
+
+        <Link
+          to={featuredArticle ? '/articles/' + featuredArticle.id : '/articles'}
+          className="group mt-5 flex items-center gap-4 rounded-3xl border border-border bg-card p-4 transition hover:border-foreground/20 sm:mt-6 sm:p-5"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">
+              {lang === 'en' ? 'Knowledge library' : 'Perpustakaan pengetahuan'}
+            </p>
+            <p className="mt-1 truncate text-sm font-semibold">
+              {featuredArticle?.title || (lang === 'en' ? 'Explore articles' : 'Jelajahi artikel')}
+            </p>
+            <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+              {featuredArticle?.summary || (lang === 'en' ? 'Research explained clearly.' : 'Riset dijelaskan dengan bahasa yang mudah dipahami.')}
+            </p>
+            {featuredArticle && (
+              <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                <Clock3 className="h-3 w-3" />
+                {featuredArticle.readingTimeMinutes || 1} {lang === 'en' ? 'min read' : 'menit baca'}
+              </span>
+            )}
+          </div>
+          <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
+        </Link>
 
         <main className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4">
           <FunFactCard fact={fact} loading={factLoading} onExplain={explainFact} />
