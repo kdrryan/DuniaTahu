@@ -84,6 +84,26 @@ export async function fetchDailyFact(lang = 'id') {
   return data.fact;
 }
 
+export async function fetchArticles(lang = 'id', limit = 20) {
+  const query = new URLSearchParams({
+    lang: lang === 'en' ? 'en' : 'id',
+    limit: String(Math.min(50, Math.max(1, limit))),
+  });
+  const data = await apiRequest('/api/articles?' + query.toString());
+  return Array.isArray(data?.articles) ? data.articles : [];
+}
+
+export async function fetchArticle(articleId) {
+  if (typeof articleId !== 'string' || !/^[A-Z]\\d{3,}-\\d{2}$/.test(articleId)) {
+    throw new ApiError('request');
+  }
+  const data = await apiRequest('/api/articles/' + encodeURIComponent(articleId));
+  if (!data?.article || typeof data.article.title !== 'string') {
+    throw new ApiError('empty_response');
+  }
+  return data.article;
+}
+
 export async function askWorld({ question, lang = 'id' }) {
   const data = await apiRequest('/api/askWorld', {
     method: 'POST',
