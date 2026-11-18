@@ -59,8 +59,9 @@ export function extractLicensedFullText(xml) {
   const hrefMatch = licenseMatch[1].match(/(?:xlink:)?href=["']([^"']+)["']/i);
   const licenseUrl = hrefMatch?.[1] || '';
   const licenseText = stripXml(licenseMatch[2]);
-  const isCcBy40 = /^https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/?$/i.test(licenseUrl) ||
-    /creative commons attribution license \(cc by 4\.0\)/i.test(licenseText);
+  const isCcBy40 = licenseUrl
+    ? /^https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/?$/i.test(licenseUrl)
+    : /creative commons attribution license \(cc by 4\.0\)/i.test(licenseText);
   if (!isCcBy40) {
     return { valid: false, error: 'The full-text license is not an approved CC BY 4.0 license.' };
   }
