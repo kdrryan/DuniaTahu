@@ -31,16 +31,17 @@ export default function SettingsButton() {
         onClick={() => setOpen((value) => !value)}
         aria-label={t('settings.open')}
         aria-expanded={open}
-        className="glass inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground/65 transition hover:text-foreground"
+        title={t('settings.open')}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground/65 transition hover:bg-foreground/5 hover:text-foreground"
       >
-        <Settings className="h-4 w-4" />
+        <Settings className="h-[18px] w-[18px]" />
       </button>
 
       {open && (
         <div
           role="dialog"
           aria-label={t('settings.title')}
-          className="glass absolute right-0 top-11 z-50 w-[min(15rem,calc(100vw_-_2rem))] rounded-3xl p-3"
+          className="absolute right-0 top-12 z-50 w-[min(15rem,calc(100vw_-_2rem))] rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl"
         >
           <div className="flex items-center justify-between gap-2 px-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
@@ -50,7 +51,7 @@ export default function SettingsButton() {
               type="button"
               onClick={() => setOpen(false)}
               aria-label={t('settings.close')}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-foreground/40 transition hover:bg-foreground/6 hover:text-foreground"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-foreground/40 transition hover:bg-foreground/5 hover:text-foreground"
             >
               <X className="h-3 w-3" />
             </button>
