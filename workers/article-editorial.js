@@ -158,13 +158,36 @@ async function callGemini(env, prompt) {
     });
     const body = await upstream.json().catch(() => null);
     if (!upstream.ok) {
-      console.error('Editorial Gemini request failed.', { status: upstream.status });
-      throw new Error('Editorial AI provider returned an error.');
+      const error = new Error('Gemini request failed with HTTP ' + upstream.status + '.');
+      error.code = 'gemini_http_error';
+      error.providerStatus = upstream.status;
+      console.error('Editorial Gemini request failed.', {
+        status: upstream.status,
+        providerMessage: String(body?.error?.message || '').slice(0, 300),
+        providerStatus: body?.error?.status || null,
+      });
+      throw error;
     }
-    const text = body?.candidates?.[0]?.content?.parts
+    const candidate = body?.candidates?.[0];
+    const finishReason = candidate?.finishReason || null;
+    const text = candidate?.content?.parts
       ?.map((part) => part.text || '').join('').trim();
-    if (!text) throw new Error('Editorial AI returned no content.');
-    return JSON.parse(text.replace(/^\uFEFF/, '').trim());
+    if (!text) {
+      const error = new Error('Gemini returned no text content.');
+      error.code = 'gemini_empty_response';
+      error.finishReason = finishReason;
+      error.promptFeedbackBlockReason = body?.promptFeedback?.blockReason || null;
+      throw error;
+    }
+    try {
+      return JSON.parse(text.replace(/^\\uFEFF/, '').trim());
+    } catch {
+      const error = new Error('Gemini returned text that was not valid JSON.');
+      error.code = 'gemini_invalid_json';
+      error.finishReason = finishReason;
+      error.outputLength = text.length;
+      throw error;
+    }
   } finally {
     clearTimeout(timeout);
   }
@@ -305,10 +328,12 @@ async function runEditorialDraft(request, env) {
 
   let generated;
   let validation;
+  let generationStage = 'initial_generation';
   try {
     generated = normalizeEditorialCitations(await callGemini(env, prompt));
     validation = validateEditorialOutput(generated, verifiedEvidence);
     if (!validation.valid) {
+      generationStage = 'repair_generation';
       const repairPrompt = [
         prompt,
         'IMPORTANT: Your previous JSON response failed validation. Regenerate the complete article from scratch and correct every issue listed here.',
@@ -321,8 +346,23 @@ async function runEditorialDraft(request, env) {
       validation = validateEditorialOutput(generated, verifiedEvidence);
     }
   } catch (error) {
-    console.error('Editorial draft generation failed.', { name: error?.name || 'Error', reason: String(error?.message || 'Unknown error').slice(0, 240) });
-    return response({ error: 'The editorial draft could not be generated right now.' }, 502);
+    const diagnostic = {
+      stage: generationStage,
+      code: error?.code || (error?.name === 'AbortError' ? 'gemini_timeout' : 'generation_failed'),
+      providerStatus: Number.isInteger(error?.providerStatus) ? error.providerStatus : null,
+      finishReason: error?.finishReason || null,
+      outputLength: Number.isInteger(error?.outputLength) ? error.outputLength : null,
+      promptFeedbackBlockReason: error?.promptFeedbackBlockReason || null,
+    };
+    console.error('Editorial draft generation failed.', {
+      ...diagnostic,
+      name: error?.name || 'Error',
+      reason: String(error?.message || 'Unknown error').slice(0, 240),
+    });
+    return response({
+      error: 'The editorial draft could not be generated right now.',
+      diagnostic,
+    }, 502);
   }
 
   if (!validation.valid) {
