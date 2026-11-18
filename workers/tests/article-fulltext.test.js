@@ -104,6 +104,66 @@ test('validates a complete evidence-bound quality review', () => {
   assert.deepEqual(result, { valid: true, errors: [] });
 });
 
+test('allows empty quality flags when none were identified', () => {
+  const fullText = 'Climate change affects mental health in many different populations, according to the review.';
+  const result = validateQualityOutput({
+    overallAssessment: 'The review is useful but has limitations.',
+    researchQuestionAlignment: 'The article addresses the research question.',
+    methodologyAssessment: 'The review methodology is described.',
+    evidenceAssessment: 'The verified claim is supported by the supplied text.',
+    keyClaims: [{
+      claim: 'The review identifies mental health impacts.',
+      evidenceExcerpt: 'Climate change affects mental health in many different populations',
+      assessment: 'This statement appears directly in the article.',
+    }],
+    limitations: ['The review has a defined search period.'],
+    qualityFlags: [],
+    recommendations: ['Keep conclusions proportional to the review design.'],
+    qualityDecision: 'pass',
+    editorialReadiness: true,
+  }, fullText);
+  assert.deepEqual(result, { valid: true, errors: [] });
+});
+
+test('allows a non-passing review with no verified claims only when the evidence problem is disclosed', () => {
+  const base = {
+    overallAssessment: 'The review cannot be assessed confidently.',
+    researchQuestionAlignment: 'Alignment is unclear.',
+    methodologyAssessment: 'The supplied text does not provide enough detail.',
+    evidenceAssessment: 'No claim could be verified with an exact excerpt.',
+    keyClaims: [],
+    limitations: ['The available evidence is insufficient.'],
+    qualityFlags: ['No key claim could be matched to a verbatim passage in the supplied full text.'],
+    recommendations: ['Require editorial review before using this source.'],
+    qualityDecision: 'needs_revision',
+    editorialReadiness: false,
+  };
+  assert.equal(validateQualityOutput(base, 'Article body text.').valid, true);
+  assert.equal(validateQualityOutput({ ...base, qualityFlags: [] }, 'Article body text.').valid, false);
+  assert.equal(validateQualityOutput({ ...base, qualityDecision: 'pass', editorialReadiness: true }, 'Article body text.').valid, false);
+});
+
+test('rejects malformed quality flags', () => {
+  const fullText = 'Climate change affects mental health in many different populations, according to the review.';
+  const result = validateQualityOutput({
+    overallAssessment: 'Assessment.',
+    researchQuestionAlignment: 'Aligned.',
+    methodologyAssessment: 'Described.',
+    evidenceAssessment: 'Supported.',
+    keyClaims: [{
+      claim: 'Claim.',
+      evidenceExcerpt: 'Climate change affects mental health in many different populations',
+      assessment: 'Supported.',
+    }],
+    limitations: ['A limitation.'],
+    qualityFlags: ['  '],
+    recommendations: ['A recommendation.'],
+    qualityDecision: 'needs_revision',
+    editorialReadiness: false,
+  }, fullText);
+  assert.equal(result.valid, false);
+});
+
 test('does not allow editorial readiness for a non-passing review', () => {
   const result = validateQualityOutput({
     overallAssessment: 'Needs work.',

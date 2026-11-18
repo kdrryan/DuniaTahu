@@ -125,25 +125,35 @@ export function validateQualityOutput(value, fullText = '') {
   for (const key of ['overallAssessment', 'researchQuestionAlignment', 'methodologyAssessment', 'evidenceAssessment']) {
     if (typeof value[key] !== 'string' || !value[key].trim()) errors.push(key + ' is required.');
   }
-  for (const key of ['limitations', 'qualityFlags', 'recommendations']) {
+  for (const key of ['limitations', 'recommendations']) {
     if (!Array.isArray(value[key]) || value[key].length === 0 ||
         value[key].some((item) => typeof item !== 'string' || !item.trim())) {
       errors.push(key + ' must contain non-empty text items.');
     }
   }
-  if (!Array.isArray(value.keyClaims) || value.keyClaims.length === 0) {
-    errors.push('keyClaims must contain at least one evidence-backed claim.');
+  if (!Array.isArray(value.qualityFlags) ||
+      value.qualityFlags.some((item) => typeof item !== 'string' || !item.trim())) {
+    errors.push('qualityFlags must be an array of text items (an empty array is allowed when no flags were identified).');
+  }
+  if (!Array.isArray(value.keyClaims)) {
+    errors.push('keyClaims must be an array.');
   } else {
-    const normalizedText = fullText.replace(/\s+/g, ' ').toLocaleLowerCase();
+    const normalizedText = fullText.replace(/\s+/g, ' ').normalize('NFKC').toLocaleLowerCase();
     value.keyClaims.forEach((claim, index) => {
       if (!claim || typeof claim.claim !== 'string' || !claim.claim.trim() ||
           typeof claim.assessment !== 'string' || !claim.assessment.trim() ||
           typeof claim.evidenceExcerpt !== 'string' || claim.evidenceExcerpt.trim().length < 24) {
         errors.push('keyClaims[' + index + '] is incomplete.');
-      } else if (fullText && !normalizedText.includes(claim.evidenceExcerpt.replace(/\s+/g, ' ').trim().toLocaleLowerCase())) {
+      } else if (fullText && !normalizedText.includes(claim.evidenceExcerpt.replace(/\s+/g, ' ').normalize('NFKC').trim().toLocaleLowerCase())) {
         errors.push('keyClaims[' + index + '] evidence is not present in the full text.');
       }
     });
+    if (value.keyClaims.length === 0 && value.qualityDecision === 'pass') {
+      errors.push('A passing review must contain at least one evidence-backed claim.');
+    }
+    if (value.keyClaims.length === 0 && value.qualityDecision !== 'pass' && value.qualityFlags.length === 0) {
+      errors.push('A non-passing review without verified claims must explain the evidence failure in qualityFlags.');
+    }
   }
   if (!['pass', 'needs_revision', 'reject'].includes(value.qualityDecision)) {
     errors.push('qualityDecision is invalid.');
@@ -224,7 +234,9 @@ async function generateQualityReview(env, source, research, fullText, language) 
     'Use only the supplied article text and prior research JSON. Do not add outside facts or invented methods, findings, citations, or page numbers.',
     'Treat the article authors\' statements as claims to assess, not as automatically proven facts.',
     'Check whether the prior research summary accurately represents the full article, whether methods and evidence support its claims, and what limitations or contradictions matter.',
-    'Every keyClaims item must include an exact verbatim excerpt of at least 24 characters copied from the supplied full text.',
+    'Return between 1 and 5 keyClaims only when you can support each one with an exact, contiguous quotation copied character-for-character from the supplied full text. Each evidenceExcerpt must be 24 to 120 characters; do not paraphrase, translate, repair grammar, add ellipses, or combine separate passages.',
+    'Before returning JSON, verify every evidenceExcerpt by locating that exact text in the supplied full text. If no claim can be verified exactly, return keyClaims as an empty array, set qualityDecision to needs_revision or reject (never pass), and explain the evidence problem in qualityFlags.',
+    'qualityFlags must be an array. Use an empty array only when no material quality flags were identified; otherwise provide concise, specific flags. Do not invent a flag merely to fill the array.',
     'Do not reproduce long passages. Keep evidence excerpts short. Do not provide medical advice.',
     language === 'en' ? 'Write explanatory fields in clear English.' : 'Tulis semua penjelasan dalam Bahasa Indonesia yang jelas.',
     'Set qualityDecision to pass only when the source is sufficiently clear, the prior research is materially supported, and no critical unresolved issue remains. Otherwise use needs_revision or reject.',
