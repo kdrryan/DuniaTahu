@@ -1,4 +1,5 @@
 import { formatArticleId } from './lib/article-id.js';
+import { runAutomatedArticleReview } from './article-ai-review.js';
 const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const PROMPT_VERSION = 'ratio-editorial-v1';
@@ -245,15 +246,28 @@ async function runEditorialDraft(request, env) {
      WHERE g.fulltext_review_id = ? LIMIT 1`
   ).bind(reviewRow.id).first();
   if (priorDraft) {
-    if (priorDraft.status !== 'draft') {
-      return response({ error: 'This reviewed source has already been converted into an article record.' }, 409);
+    if (priorDraft.status === 'published') {
+      return response({
+        articleId: priorDraft.article_id,
+        status: 'published',
+        editorialStatus: 'ai_review_passed',
+        reused: true,
+      });
     }
+    if (priorDraft.status !== 'draft') {
+      return response({
+        articleId: priorDraft.article_id,
+        status: priorDraft.status,
+        editorialStatus: 'not_eligible_for_ai_review',
+        reused: true,
+      }, 409);
+    }
+    const aiReview = await runAutomatedArticleReview(priorDraft.article_id, env);
     return response({
       articleId: priorDraft.article_id,
-      status: 'draft',
-      editorialStatus: 'pending_human_review',
+      ...aiReview,
       reused: true,
-    });
+    }, aiReview.status === 'published' ? 200 : 202);
   }
 
   let source;
@@ -430,7 +444,7 @@ async function runEditorialDraft(request, env) {
     ).bind(articleId, sourceUrl, sourceTitle, citationNote),
     env.DB.prepare(
       `INSERT INTO article_versions (article_id, version_number, snapshot_json, change_reason)
-       VALUES (?, 1, ?, 'AI-generated editorial draft; pending human editorial review')`
+       VALUES (?, 1, ?, 'AI-generated editorial draft; awaiting automated AI fact-check')`
     ).bind(articleId, JSON.stringify(snapshot)),
     env.DB.prepare(
       `INSERT INTO article_editorial_generations
@@ -452,10 +466,12 @@ async function runEditorialDraft(request, env) {
     return response({ error: 'The editorial draft could not be saved.' }, 500);
   }
 
+  const aiReview = await runAutomatedArticleReview(articleId, env);
   return response({
     articleId,
-    status: 'draft',
-    editorialStatus: 'pending_human_review',
+    status: aiReview.status || 'draft',
+    editorialStatus: aiReview.editorialStatus || 'ai_review_unavailable',
+    aiReview: aiReview.aiReview || null,
     language,
     title: generated.title.trim(),
     summary: generated.summary.trim(),
@@ -463,7 +479,7 @@ async function runEditorialDraft(request, env) {
     verifiedClaimCount: generated.verifiedClaims.length,
     source: { title: sourceTitle, url: sourceUrl, license: reviewRow.license },
     generatedFrom: { researchId: researchRow.id, fullTextReviewId: reviewRow.id },
-  }, 201);
+  }, aiReview.status === 'published' ? 201 : 202);
 }
 
 
