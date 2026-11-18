@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateAutomatedReview } from '../article-ai-review.js';
 
-const evidence = [{ id: 'E1', claim: 'Climate change and mental health pathways', evidenceIds: ['E1'], assessment: 'Directly stated.' }, { id: 'E2', claim: 'Review methodology', evidenceExcerpt: 'The authors state that this is a systematic descriptive review and not a meta-analysis.', assessment: 'Methodology description.' }];
+const evidence = [{ id: 'E1', claim: 'Climate change and mental health pathways', evidenceExcerpt: 'The present review describes several pathways linking climate change and mental health.', assessment: 'Directly stated.' }, { id: 'E2', claim: 'Review methodology', evidenceExcerpt: 'The authors state that this is a systematic descriptive review and not a meta-analysis.', assessment: 'Methodology description.' }];
 
 function passingReview(paragraphCount = 2) {
   return {
@@ -23,7 +23,7 @@ function passingReview(paragraphCount = 2) {
       claims: [{
         claim: 'The review describes pathways related to climate change and mental health.',
         supported: true,
-        evidenceExcerpt: 'The present review describes several pathways linking climate change and mental health.',
+        evidenceIds: ['E1'],
       }],
       note: 'The paragraph is supported by the cited source.',
     })),
@@ -58,7 +58,7 @@ test('rejects a claimed pass with an unsupported factual claim', () => {
 test('rejects unknown evidence IDs even when the model marks claims supported', () => {
   const review = passingReview();
   review.paragraphAudits[0].claims[0].evidenceIds = ['E999'];
-  const result = validateAutomatedReview(review, 2, source);
+  const result = validateAutomatedReview(review, 2, evidence);
   assert.equal(result.valid, false);
   assert.equal(result.canPublish, false);
 });
@@ -84,7 +84,7 @@ test('allows minor editorial notes while requiring all core checks to pass', () 
     issue: 'A sentence could be shorter.',
     suggestedFix: 'Tighten the sentence.',
   }];
-  assert.equal(validateAutomatedReview(review, 2, source).canPublish, true);
+  assert.equal(validateAutomatedReview(review, 2, evidence).canPublish, true);
 });
 
 test('requires valid reviewer decisions and check statuses', () => {
