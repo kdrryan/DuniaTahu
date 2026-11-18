@@ -480,13 +480,31 @@ export async function runAutomatedArticleReview(articleId, env) {
       currentArticle, context.source, context.fullText, context.quality,
       context.verifiedEvidence
     );
-    const raw = await callGemini(
-      env, prompt,
-      'You are Ratio AI Editorial Auditor. You independently fact-check educational articles against their supplied source. Be skeptical, precise, fair, and strict. Never approve unsupported claims. Return JSON only.',
-      6144
-    );
+    const role = 'You are Ratio AI Editorial Auditor. You independently fact-check educational articles against their supplied source. Be skeptical, precise, fair, and strict. Never approve unsupported claims. Return JSON only.';
     const paragraphCount = flattenParagraphs(currentArticle).length;
-    const validation = validateAutomatedReview(raw, paragraphCount, context.fullText);
+    let raw = await callGemini(env, prompt, role, 6144);
+    let validation = validateAutomatedReview(raw, paragraphCount, context.fullText);
+
+    // A model may accidentally paraphrase a quotation. Give it one tightly
+    // constrained chance to repair evidence excerpts; never weaken validation.
+    const excerptOnlyFailure = validation.errors.length > 0 &&
+      validation.errors.every((error) =>
+        error === 'A supported claim does not include an exact, verifiable source excerpt.'
+      );
+    if (!validation.valid && excerptOnlyFailure) {
+      const repairPrompt = [
+        'Your previous audit failed deterministic evidence validation.',
+        'Return the complete corrected review JSON in the exact same schema.',
+        'For each claim marked supported=true, copy a contiguous quotation verbatim from SOURCE FULL TEXT below. Do not paraphrase, translate, summarize, or normalize it. The quote must be at least 24 characters and must appear exactly in the source text.',
+        'If you cannot find a verbatim passage that directly supports the claim, set supported=false, set the paragraph result to revise, and add a major finding explaining the unsupported claim.',
+        'Do not change the article or invent a quotation. Do not claim that a quote is exact unless you have copied it directly.',
+        'VALIDATION ERROR: ' + JSON.stringify(validation.errors),
+        'PREVIOUS AUDIT: ' + JSON.stringify(raw),
+        'SOURCE FULL TEXT: ' + JSON.stringify(context.fullText),
+      ].join('\\n\\n');
+      raw = await callGemini(env, repairPrompt, role, 6144);
+      validation = validateAutomatedReview(raw, paragraphCount, context.fullText);
+    }
     return { raw, validation };
   };
 
