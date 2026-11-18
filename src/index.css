@@ -266,11 +266,20 @@
 
 .ratio-bot-eyes {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(-50%, -50%) translate3d(var(--gaze-x, 0px), var(--gaze-y, 0px), 0);
   transition:
     opacity 300ms ease,
-    transform 420ms cubic-bezier(.2,.75,.25,1),
-    gap 420ms ease;
+    transform 280ms cubic-bezier(.2,.75,.25,1),
+    gap 320ms ease;
+  will-change: transform;
+}
+
+.ratio-bot-eyes-idle {
+  transition: transform 650ms cubic-bezier(.2,.75,.25,1);
+}
+
+.ratio-bot-eyes-tracking {
+  transition: transform 180ms cubic-bezier(.2,.75,.25,1);
 }
 
 .ratio-bot-eye {
@@ -379,6 +388,8 @@
 
   .ratio-bot-face,
   .ratio-bot-eyes,
+  .ratio-bot-eyes-idle,
+  .ratio-bot-eyes-tracking,
   .ratio-bot-eye,
   .ratio-bot-thinking-dots {
     transition: none !important;
