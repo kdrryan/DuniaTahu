@@ -160,6 +160,7 @@ async function fetchEuropePmcFullText(doi) {
   // the reusable full-text record through PMC's official OAI-PMH endpoint.
   const converterUrl = new URL('https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/');
   converterUrl.searchParams.set('ids', normalizedDoi);
+  converterUrl.searchParams.set('idtype', 'doi');
   converterUrl.searchParams.set('format', 'json');
   const converted = await fetchJson(converterUrl, 'PMC ID Converter');
   const records = converted?.records || [];
