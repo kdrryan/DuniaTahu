@@ -26,14 +26,17 @@ export default function RatioMascot({ isTyping = false }) {
   const { lang } = useLanguage();
   const [bubble, setBubble] = useState(null);
   const [canTap, setCanTap] = useState(true);
+  const [isReacting, setIsReacting] = useState(false);
   const bubbleTimer = useRef(null);
   const cooldownTimer = useRef(null);
+  const reactionTimer = useRef(null);
   const lastTap = useRef(0);
   const lastGreeting = useRef(-1);
 
   useEffect(() => () => {
     window.clearTimeout(bubbleTimer.current);
     window.clearTimeout(cooldownTimer.current);
+    window.clearTimeout(reactionTimer.current);
   }, []);
 
   const handleTap = () => {
@@ -42,6 +45,9 @@ export default function RatioMascot({ isTyping = false }) {
 
     lastTap.current = now;
     setCanTap(false);
+    setIsReacting(true);
+    window.clearTimeout(reactionTimer.current);
+    reactionTimer.current = window.setTimeout(() => setIsReacting(false), 850);
 
     const greetings = GREETINGS[lang] || GREETINGS.id;
     let index = Math.floor(Math.random() * greetings.length);
@@ -102,11 +108,14 @@ export default function RatioMascot({ isTyping = false }) {
           onClick={handleTap}
           aria-label={lang === 'en' ? 'Say hello to Ratio Bot' : 'Sapa Ratio Bot'}
           aria-disabled={!canTap}
-          className={`ratio-bot-float relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-[#050506] shadow-[0_12px_38px_rgba(0,0,0,0.24)] ring-1 ring-white/[0.06] outline-none transition-transform duration-200 focus-visible:ring-2 focus-visible:ring-[#52769A] sm:h-36 sm:w-36 ${canTap ? 'active:scale-[0.96]' : 'cursor-default'}`}
+          className={`ratio-bot-float relative z-10 flex h-32 w-32 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#52769A] sm:h-36 sm:w-36 ${canTap ? 'active:scale-[0.96]' : 'cursor-default'}`}
         >
-          <span className={`ratio-bot-eyes flex items-center gap-[18px] ${isTyping ? 'ratio-bot-eyes-typing' : 'ratio-bot-eyes-idle'}`}>
-            <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rotate-[-18deg] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
-            <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rotate-[-12deg] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+          <span className={`ratio-bot-head relative flex h-full w-full items-center justify-center rounded-full ${isReacting ? 'ratio-bot-reacting' : ''}`}>
+            <span aria-hidden="true" className="ratio-bot-gloss absolute inset-0 rounded-full" />
+            <span className={`ratio-bot-face relative z-10 flex items-center justify-center gap-[18px] ${isTyping ? 'ratio-bot-eyes-typing' : 'ratio-bot-eyes-idle'}`}>
+              <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+              <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
+            </span>
           </span>
         </button>
       </div>
