@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",
-    "test:articles": "node --test workers/tests/article-library.test.js workers/tests/openalex-candidates.test.js workers/tests/article-research.test.js workers/tests/article-fulltext.test.js workers/tests/article-editorial.test.js workers/tests/article-ai-review.test.js"
+    "test:articles": "node --test workers/tests/article-citations.test.js workers/tests/article-library.test.js workers/tests/openalex-candidates.test.js workers/tests/article-research.test.js workers/tests/article-fulltext.test.js workers/tests/article-editorial.test.js workers/tests/article-ai-review.test.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
