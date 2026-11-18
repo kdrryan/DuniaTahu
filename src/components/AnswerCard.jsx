@@ -78,7 +78,7 @@ export default function AnswerCard({ entry, loading }) {
       await copyText(completeAnswer);
       toast({ description: t('answer.copied') });
     } catch {
-
+      // Keep the copy action available if the clipboard is unavailable.
     }
   };
 
@@ -88,7 +88,7 @@ export default function AnswerCard({ entry, loading }) {
       await copyText(selectedText);
       toast({ description: t('answer.copied') });
     } catch {
-
+      // Keep the copy action available if the clipboard is unavailable.
     }
   };
 
@@ -107,8 +107,8 @@ export default function AnswerCard({ entry, loading }) {
           await copyText(selectedText);
           toast({ description: t('answer.copied') });
         } catch {
-    
-        }
+      // Keep the copy action available if the clipboard is unavailable.
+    }
       }
     }
   };
