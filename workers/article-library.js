@@ -1,4 +1,5 @@
 import { formatArticleId } from './lib/article-id.js';
+import { normalizeCitationBlocks, markdownFromContentBlocks } from './lib/article-citations.js';
 import { searchOpenAlexWorks } from './lib/openalex.js';
 import { handleOpenAlexCandidateRequest } from './openalex-candidates.js';
 import { handleArticleResearchRequest } from './article-research.js';
@@ -279,6 +280,79 @@ async function createArticleDraft(request, env) {
   return response({ articleId, status: 'draft' }, 201);
 }
 
+async function normalizePublishedArticleCitations(request, env) {
+  if (!env.ARTICLE_ADMIN_TOKEN) {
+    return response({ error: 'Article management is not configured.' }, 503);
+  }
+  const authorization = request.headers.get('Authorization') || '';
+  const providedToken = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+  if (!(await tokenMatches(providedToken, env.ARTICLE_ADMIN_TOKEN))) {
+    return response({ error: 'Unauthorized.' }, 401);
+  }
+  if (!env.DB) return response({ error: 'Article library is unavailable.' }, 503);
+
+  const input = await request.json().catch(() => null);
+  const articleId = input?.articleId;
+  if (typeof articleId !== 'string' || !/^[A-Z]\\d{3,}-\\d{2}$/.test(articleId)) {
+    return response({ error: 'A valid article ID is required.' }, 400);
+  }
+
+  const row = await env.DB.prepare(
+    "SELECT * FROM articles WHERE article_id = ? AND status = 'published'"
+  ).bind(articleId).first();
+  if (!row) return response({ error: 'Published article not found.' }, 404);
+
+  let existingBlocks;
+  try {
+    existingBlocks = JSON.parse(row.content_blocks_json);
+  } catch {
+    existingBlocks = null;
+  }
+  if (!Array.isArray(existingBlocks) || !existingBlocks.some((block) => block?.type === 'paragraph')) {
+    return response({ error: 'The article content structure could not be normalized.' }, 409);
+  }
+
+  const contentBlocks = normalizeCitationBlocks(existingBlocks);
+  const contentMarkdown = markdownFromContentBlocks(contentBlocks);
+  if (contentMarkdown === row.content_markdown &&
+      JSON.stringify(contentBlocks) === JSON.stringify(existingBlocks)) {
+    return response({ articleId, status: 'published', citationNormalization: 'already_canonical' });
+  }
+
+  const readingTimeMinutes = Math.max(1,
+    Math.ceil(contentMarkdown.trim().split(/\\s+/).filter(Boolean).length / 200));
+  const snapshot = {
+    articleId: row.article_id,
+    categoryCode: row.category_code,
+    categorySequence: row.category_sequence,
+    specialNumber: row.special_number,
+    slug: row.slug,
+    language: row.language,
+    title: row.title,
+    summary: row.summary,
+    contentMarkdown,
+    contentBlocks,
+    readingTimeMinutes,
+    status: 'draft',
+  };
+
+  await env.DB.batch([
+    env.DB.prepare(
+      "UPDATE articles SET content_markdown = ?, content_blocks_json = ?, reading_time_minutes = ?, status = 'draft', published_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE article_id = ? AND status = 'published'"
+    ).bind(contentMarkdown, JSON.stringify(contentBlocks), readingTimeMinutes, articleId),
+    env.DB.prepare(
+      "INSERT INTO article_versions (article_id, version_number, snapshot_json, change_reason) SELECT ?, COALESCE(MAX(version_number), 0) + 1, ?, 'Canonical citation normalization before automated re-review' FROM article_versions WHERE article_id = ?"
+    ).bind(articleId, JSON.stringify(snapshot), articleId),
+  ]);
+
+  const aiReview = await runAutomatedArticleReview(articleId, env);
+  return response({
+    articleId,
+    citationNormalization: 'completed',
+    ...aiReview,
+  }, aiReview.status === 'published' ? 200 : 202);
+}
+
 async function searchOpenAlex(request, env) {
   if (!env.ARTICLE_ADMIN_TOKEN) {
     return response({ error: 'Article management is not configured.' }, 503);
@@ -345,6 +419,10 @@ export async function handleArticleLibraryRequest(request, env) {
   if (candidateResponse) return candidateResponse;
 
   const url = new URL(request.url);
+
+  if (url.pathname === '/api/admin/articles/normalize-citations' && request.method === 'POST') {
+    return normalizePublishedArticleCitations(request, env);
+  }
 
   if (url.pathname === '/api/articles' && request.method === 'GET') {
     return listArticles(request, env);
