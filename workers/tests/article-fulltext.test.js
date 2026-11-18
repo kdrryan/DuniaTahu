@@ -5,6 +5,7 @@ import {
   findMatchingPmcRecord,
   retainEvidenceBackedClaims,
   validateQualityOutput,
+  downgradeUnverifiedPass,
 } from '../article-fulltext.js';
 
 const xml = `<?xml version="1.0"?>
@@ -178,4 +179,38 @@ test('does not allow editorial readiness for a non-passing review', () => {
     editorialReadiness: true,
   }, 'This excerpt is at least twenty four characters long.');
   assert.equal(result.valid, false);
+});
+
+
+test('downgrades a pass when no evidence-backed claims survive verification', () => {
+  const original = {
+    overallAssessment: 'The article appears relevant.',
+    researchQuestionAlignment: 'Aligned.',
+    methodologyAssessment: 'Methods are described.',
+    evidenceAssessment: 'Evidence needs checking.',
+    limitations: ['Evidence excerpt could not be verified.'],
+    qualityFlags: [],
+    recommendations: [],
+    keyClaims: [],
+    qualityDecision: 'pass',
+    editorialReadiness: true,
+  };
+  const result = downgradeUnverifiedPass(original, 'en');
+  assert.equal(result.qualityDecision, 'needs_revision');
+  assert.equal(result.editorialReadiness, false);
+  assert.equal(result.qualityFlags.length, 1);
+  assert.match(result.qualityFlags[0], /no key claim had a verifiable evidence excerpt/);
+  assert.equal(result.recommendations.length, 1);
+  assert.equal(original.qualityDecision, 'pass');
+  assert.equal(validateQualityOutput(result, 'Article body text.').valid, true);
+});
+
+test('does not downgrade a pass that has verified evidence-backed claims', () => {
+  const original = {
+    qualityDecision: 'pass',
+    editorialReadiness: true,
+    keyClaims: [{ claim: 'A supported claim.', evidenceExcerpt: 'This is a sufficiently long exact excerpt.', assessment: 'Supported.' }],
+  };
+  const result = downgradeUnverifiedPass(original, 'en');
+  assert.equal(result, original);
 });
