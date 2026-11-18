@@ -146,13 +146,18 @@ Ratio/
 | npm run lint | Run ESLint |
 | npm run typecheck | Run TypeScript checks |
 
-## Deployment
+## Deployment Workflow
 
-- **Frontend:** Cloudflare Pages (current legacy URL: `duniatahu.pages.dev`)
-- **Backend:** Cloudflare Worker `duniatahu-api`
-- **Android:** GitHub Actions and GitHub Releases
+The public website is the live web testing environment for Ratio. It is used to review and test changes before preparing the final Android app.
 
-Frontend, backend, and Android delivery are independent. Worker-only changes do not require a new Android APK.
+- **Web testing site:** https://duniatahu.pages.dev
+- **Web API:** Preview Worker `duniatahu-api-preview` with the isolated article-preview D1 database.
+- **Final Android app:** Built manually through GitHub Actions and connected to the production Worker `duniatahu-api`.
+- **Android release:** Created only after the web version has been reviewed and approved.
+
+The Pages project deploys the active integration branch to the web testing site. Separate Pages Preview deployments are disabled to keep one stable web URL. The Android build workflow explicitly uses the production API URL, so web testing does not publish changes to the final app or its production database.
+
+Worker-only changes do not require a new Android APK. Do not create a public Android release until the app is ready.
 
 ---
 

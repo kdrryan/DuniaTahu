@@ -7,3 +7,13 @@ account_id = "ec28f930afa6265cb780e1045a87dedc"
 binding = "DB"
 database_name = "duniatahu-db"
 database_id = "e174c082-ae9e-4aba-9e23-d32e0b9d0dfe"
+
+# Isolated Article Library preview environment.
+# Production continues to use the root DB binding above.
+[env.preview]
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "ratio-articles-preview"
+database_id = "3a422cd0-0a1e-4357-94c1-cbaf167f2c56"
+migrations_dir = "migrations"
