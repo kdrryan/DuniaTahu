@@ -370,5 +370,7 @@
   .ratio-bot-eyes,
   .ratio-bot-eyes-idle,
   .ratio-bot-eyes-tracking,
-  .ratio-bot-eye,
+  .ratio-bot-eye {
+    transition: none !important;
+  }
 }
