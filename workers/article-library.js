@@ -1,5 +1,6 @@
 import { formatArticleId } from './lib/article-id.js';
 import { searchOpenAlexWorks } from './lib/openalex.js';
+import { handleOpenAlexCandidateRequest } from './openalex-candidates.js';
 import { validateArticleDraft } from './lib/article-validation.js';
 
 const corsHeaders = {
@@ -324,6 +325,9 @@ async function searchOpenAlex(request, env) {
 }
 
 export async function handleArticleLibraryRequest(request, env) {
+  const candidateResponse = await handleOpenAlexCandidateRequest(request, env);
+  if (candidateResponse) return candidateResponse;
+
   const url = new URL(request.url);
 
   if (url.pathname === '/api/articles' && request.method === 'GET') {
