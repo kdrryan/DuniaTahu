@@ -5,7 +5,7 @@ import FunFactCard from '@/components/FunFactCard';
 import AskBox from '@/components/AskBox';
 import AnswerCard from '@/components/AnswerCard';
 import HistoryList from '@/components/HistoryList';
-import { fetchDailyFact, askWorld, fetchArticles } from '@/lib/api';
+import { fetchDailyFact, askWorld } from '@/lib/api';
 import { loadHistory, saveHistory } from '@/lib/history';
 import { useLanguage } from '@/lib/LanguageContext';
 

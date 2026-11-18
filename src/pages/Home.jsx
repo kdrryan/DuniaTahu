@@ -10,7 +10,6 @@ export default function Home() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
-  const isId = lang !== 'en';
 
   useEffect(() => {
     let active = true;
