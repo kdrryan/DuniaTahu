@@ -228,7 +228,7 @@ async function runEditorialDraft(request, env) {
     'Create an original Ratio educational feature article. This is a fresh editorial explanation, not a summary or translation of the source paper.',
     language === 'en' ? 'Write naturally in English.' : 'Tulis secara natural dalam Bahasa Indonesia.',
     'Audience: curious general readers. Explain technical concepts clearly without oversimplifying or sensationalizing.',
-    'Use only the source metadata, abstract research, full-text quality assessment, and verified evidence list supplied below. Do not use outside knowledge to add factual claims.',
+    'Use only the source metadata, abstract research, full-text quality assessment, and verified evidence list supplied below. Every factual statement in the article body must be supported by at least one verified evidence item. Do not rely on an abstract-only claim unless it is also represented in the verified full-text evidence list. Do not use outside knowledge to add factual claims.',
     'Do not invent people, dates, statistics, mechanisms, study methods, sample sizes, causal relationships, or conclusions.',
     'Do not copy source sentences. Paraphrase in original language. Never include long quotations.',
     'Distinguish the review authors’ conclusions from established scientific consensus. Describe this source as a systematic descriptive review, not a meta-analysis. Preserve the stated limitation that it did not conduct a meta-analysis.',
