@@ -5,12 +5,14 @@ import {
   Bookmark,
   BookmarkCheck,
   Check,
+  Clipboard,
   Clock3,
   ExternalLink,
   List,
   LoaderCircle,
   MessageCircleQuestion,
   Moon,
+  Share2,
   Sun,
   Type,
 } from 'lucide-react';
@@ -183,6 +185,37 @@ export default function ArticleDetail() {
       return;
     }
     setSelection({ text });
+  };
+
+  const handleCopySelection = async () => {
+    if (!selection?.text) return;
+    try {
+      await navigator.clipboard.writeText(selection.text);
+      setSelection((current) => current ? { ...current, copied: true } : null);
+      window.setTimeout(() => setSelection((current) => current ? { ...current, copied: false } : null), 1800);
+    } catch {
+      // Keep the selected text and let the user use the browser's copy fallback if clipboard access is unavailable.
+    }
+  };
+
+  const handleShareSelection = async () => {
+    if (!selection?.text) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: selection.text });
+      } else {
+        await navigator.clipboard.writeText(selection.text);
+        setSelection((current) => current ? { ...current, copied: true } : null);
+        window.setTimeout(() => setSelection((current) => current ? { ...current, copied: false } : null), 1800);
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(selection.text);
+          setSelection((current) => current ? { ...current, copied: true } : null);
+        } catch { /* Share is unavailable; keep the selection toolbar visible. */ }
+      }
+    }
   };
 
   const handleAskRatio = async () => {
@@ -427,7 +460,7 @@ export default function ArticleDetail() {
               </figure>
             )}
 
-            <div className="reader-content" onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 80)} onContextMenu={() => window.setTimeout(captureSelection, 80)}>
+            <div className="reader-content" onMouseUp={captureSelection} onTouchEnd={() => window.setTimeout(captureSelection, 80)} onContextMenu={(event) => { event.preventDefault(); window.setTimeout(captureSelection, 80); }}>
               {blocks.map((block, index) => {
                 if (block.type === 'heading') {
                   const headingIndex = headings.findIndex((item) => item === block);
@@ -566,16 +599,23 @@ export default function ArticleDetail() {
           className="fixed left-1/2 top-[5.1rem] z-[70] -translate-x-1/2"
           style={{ maxWidth: 'calc(100vw - 2rem)' }}
         >
-          <button
-            type="button"
-            onPointerDown={(event) => event.preventDefault()}
-            onClick={handleAskRatio}
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-xs font-semibold shadow-lg"
-            style={{ background: colors.surface, color: colors.text, borderColor: colors.line }}
-          >
-            <MessageCircleQuestion className="h-3.5 w-3.5 text-[#52769A]" />
-            {isId ? 'Tanya Ratio' : 'Ask Ratio'}
-          </button>
+          <div className="flex items-center gap-1 rounded-full border p-1 shadow-lg" style={{ background: colors.surface, color: colors.text, borderColor: colors.line }}>
+            <button
+              type="button"
+              onClick={handleAskRatio}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold"
+            >
+              <MessageCircleQuestion className="h-3.5 w-3.5 text-[#52769A]" />
+              {isId ? 'Tanya Ratio' : 'Ask Ratio'}
+            </button>
+            <span className="h-5 w-px" style={{ background: colors.line }} />
+            <button type="button" onClick={handleCopySelection} aria-label={isId ? 'Salin teks' : 'Copy text'} title={isId ? 'Salin teks' : 'Copy text'} className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5">
+              {selection.copied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
+            </button>
+            <button type="button" onClick={handleShareSelection} aria-label={isId ? 'Bagikan teks' : 'Share text'} title={isId ? 'Bagikan teks' : 'Share text'} className="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5">
+              <Share2 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
