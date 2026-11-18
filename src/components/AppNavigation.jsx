@@ -39,7 +39,7 @@ export default function AppNavigation({ sidebarCollapsed, onToggleSidebar }) {
   const { t } = useLanguage();
   const destinations = [
     { id: 'home', to: '/', label: t('navigation.home'), Icon: House },
-    { id: 'ratio', to: '/ratio#tanya', label: t('navigation.ratio') },
+    { id: 'ratio', to: '/ratio', label: t('navigation.ratio') },
     { id: 'explore', to: '/explore', label: t('navigation.explore'), Icon: Compass },
     { id: 'saved', to: '/saved', label: t('navigation.saved'), Icon: Bookmark },
   ];
