@@ -227,6 +227,12 @@ async function runResearch(request, env) {
     return response({
       researchId: saved.id, openAlexId, status: 'completed',
       scope: 'abstract_only', fullTextReviewRequired: true,
+      source: {
+        title: source.metadata.title, doi: source.metadata.doi,
+        publicationYear: source.metadata.publicationYear,
+        sourceName: source.metadata.sourceName,
+        landingPageUrl: source.metadata.landingPageUrl,
+      },
       research, createdAt: saved.created_at,
     }, 201);
   } catch (error) {
@@ -245,14 +251,21 @@ async function getLatestResearch(request, env) {
     return response({ error: 'A valid OpenAlex work ID is required.' }, 400);
   }
   const row = await env.DB.prepare(
-    'SELECT id, language, research_status, model, research_json, created_at FROM article_research_runs WHERE openalex_id = ? ORDER BY created_at DESC, id DESC LIMIT 1'
+    'SELECT id, language, research_status, model, source_snapshot_json, research_json, created_at FROM article_research_runs WHERE openalex_id = ? ORDER BY created_at DESC, id DESC LIMIT 1'
   ).bind(openAlexId).first();
   if (!row) return response({ error: 'No research run was found for this candidate.' }, 404);
   let research = {};
+  let source = {};
   try { research = JSON.parse(row.research_json); } catch { research = {}; }
+  try { source = JSON.parse(row.source_snapshot_json); } catch { source = {}; }
   return response({
     researchId: row.id, openAlexId, language: row.language,
-    status: row.research_status, model: row.model, research, createdAt: row.created_at,
+    status: row.research_status, model: row.model,
+    source: {
+      title: source.title, doi: source.doi, publicationYear: source.publicationYear,
+      sourceName: source.sourceName, landingPageUrl: source.landingPageUrl,
+    },
+    research, createdAt: row.created_at,
   });
 }
 
