@@ -91,7 +91,7 @@ export default function Ratio() {
         <RatioMascot isTyping={isTyping} isThinking={asking} typingGaze={typingGaze} />
 
         <main className="mt-1 space-y-3.5 sm:mt-2 sm:space-y-4">
-          <section id="tanya" className="glass scroll-mt-4 rounded-3xl p-3.5 sm:p-4">
+          <section id="tanya" className="scroll-mt-4 rounded-3xl border border-border/80 bg-card p-3.5 sm:p-4">
             <AskBox onAsk={ask} loading={asking} onTypingChange={setIsTyping} onGazeChange={setTypingGaze} />
 
             {error && (
