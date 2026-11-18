@@ -5,6 +5,7 @@ import BrandHeader from '@/components/BrandHeader';
 import AskBox from '@/components/AskBox';
 import AnswerCard from '@/components/AnswerCard';
 import HistoryList from '@/components/HistoryList';
+import RatioMascot from '@/components/RatioMascot';
 import { askWorld } from '@/lib/api';
 import { loadHistory, saveHistory } from '@/lib/history';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -18,6 +19,7 @@ export default function Ratio() {
   const [current, setCurrent] = useState(null);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     if (!current) return;
@@ -85,34 +87,11 @@ export default function Ratio() {
       <div className="mx-auto w-full max-w-2xl px-3.5 pb-14 pt-5 sm:px-6 sm:pt-7">
         <BrandHeader />
 
-        <section
-          aria-label="Ratio mascot"
-          className="flex items-center justify-center pb-5 pt-9 sm:pb-7 sm:pt-12"
-        >
-          <div className="relative flex h-40 w-full items-center justify-center sm:h-48">
-            <div
-              aria-hidden="true"
-              className="absolute h-36 w-36 rounded-full bg-[#52769A]/20 blur-3xl sm:h-44 sm:w-44"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute bottom-4 h-3 w-24 rounded-[50%] bg-black/20 blur-[5px] dark:bg-black/45 sm:bottom-5"
-            />
-            <div
-              aria-hidden="true"
-              className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-[#050506] shadow-[0_12px_38px_rgba(0,0,0,0.24)] ring-1 ring-white/[0.06] sm:h-36 sm:w-36"
-            >
-              <div className="flex items-center gap-[18px]">
-                <span className="block h-[34px] w-[15px] rotate-[-18deg] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
-                <span className="block h-[34px] w-[15px] rotate-[-12deg] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
-              </div>
-            </div>
-          </div>
-        </section>
+        <RatioMascot isTyping={isTyping} />
 
         <main className="mt-1 space-y-3.5 sm:mt-2 sm:space-y-4">
           <section id="tanya" className="glass scroll-mt-4 rounded-3xl p-3.5 sm:p-4">
-            <AskBox onAsk={ask} loading={asking} />
+            <AskBox onAsk={ask} loading={asking} onTypingChange={setIsTyping} />
 
             {error && (
               <p className="mt-3 flex items-center gap-2 rounded-2xl bg-destructive/10 px-3 py-2 text-[12px] font-medium text-destructive">
