@@ -151,16 +151,34 @@ async function fetchJson(url, label) {
 }
 
 async function fetchEuropePmcFullText(doi) {
-  const searchUrl = new URL(EUROPE_PMC_BASE + '/search');
-  searchUrl.searchParams.set('query', 'EXT_ID:' + doi.replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, ''));
-  searchUrl.searchParams.set('format', 'json');
-  searchUrl.searchParams.set('pageSize', '1');
-  const search = await fetchJson(searchUrl, 'Europe PMC search');
-  const record = search?.resultList?.result?.[0];
-  const pmcid = typeof record?.pmcid === 'string' ? record.pmcid : '';
-  if (!/^PMC\d+$/.test(pmcid) || record.isOpenAccess !== 'Y') {
-    throw new Error('Europe PMC does not identify this work as an eligible open-access full-text article.');
+  const normalizedDoi = doi.replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').replace(/^doi:/i, '').trim();
+  if (!/^10\.\d{4,9}\/\S+$/i.test(normalizedDoi)) {
+    throw new Error('The source DOI is invalid.');
   }
+
+  // DOI is the canonical Europe PMC field. EXT_ID is retained as a compatibility fallback.
+  const queries = ['DOI:' + normalizedDoi, 'EXT_ID:' + normalizedDoi];
+  let record = null;
+  for (const query of queries) {
+    const searchUrl = new URL(EUROPE_PMC_BASE + '/search');
+    searchUrl.searchParams.set('query', query);
+    searchUrl.searchParams.set('format', 'json');
+    searchUrl.searchParams.set('pageSize', '5');
+    const search = await fetchJson(searchUrl, 'Europe PMC search');
+    const records = search?.resultList?.result || [];
+    record = records.find((item) => {
+      const candidateDoi = String(item?.doi || '').replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '').trim();
+      return candidateDoi.toLowerCase() === normalizedDoi.toLowerCase();
+    }) || null;
+    if (record) break;
+  }
+
+  const pmcid = typeof record?.pmcid === 'string' ? record.pmcid : '';
+  const openAccess = record?.isOpenAccess === 'Y' || record?.isOpenAccess === true;
+  if (!/^PMC\d+$/.test(pmcid) || !openAccess) {
+    throw new Error('Europe PMC did not return a matching DOI record with an eligible open-access PMCID.');
+  }
+
   const xmlUrl = EUROPE_PMC_BASE + '/' + pmcid + '/fullTextXML';
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
