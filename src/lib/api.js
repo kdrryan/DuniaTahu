@@ -94,7 +94,7 @@ export async function fetchArticles(lang = 'id', limit = 20) {
 }
 
 export async function fetchArticle(articleId) {
-  if (typeof articleId !== 'string' || !/^[A-Z]\\d{3,}-\\d{2}$/.test(articleId)) {
+  if (typeof articleId !== 'string' || !/^[A-Z]\d{3,}-\d{2}$/.test(articleId)) {
     throw new ApiError('request');
   }
   const data = await apiRequest('/api/articles/' + encodeURIComponent(articleId));
