@@ -57,7 +57,7 @@ export default function HistoryList({ items, onClear }) {
       await copyText(getHistoryText(selected));
       toast({ description: t('answer.copied') });
     } catch {
-
+      // Keep the copy action available if the clipboard is unavailable.
     }
   };
 
@@ -77,8 +77,8 @@ export default function HistoryList({ items, onClear }) {
           await copyText(text);
           toast({ description: t('answer.copied') });
         } catch {
-    
-        }
+      // Keep the copy action available if the clipboard is unavailable.
+    }
       }
     }
   };
