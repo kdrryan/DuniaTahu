@@ -22,16 +22,6 @@ async function copyText(value) {
   if (!copied) throw new Error('Copy unavailable');
 }
 
-function getCompleteAnswer(entry) {
-  return [
-    entry.title,
-    entry.answer,
-    entry.quick_facts?.length
-      ? '\n\n' + entry.quick_facts.map((fact, index) => `${index + 1}. ${fact}`).join('\n')
-      : '',
-  ].filter(Boolean).join('\n\n').trim();
-}
-
 export default function AnswerCard({ entry, loading }) {
   const { lang, t } = useLanguage();
   const isId = lang !== 'en';
@@ -40,6 +30,7 @@ export default function AnswerCard({ entry, loading }) {
   const [copied, setCopied] = useState(false);
   const [selectedCopied, setSelectedCopied] = useState(false);
   const textViewRef = useRef(null);
+  const answerContentRef = useRef(null);
 
   if (loading) {
     return (
@@ -59,7 +50,13 @@ export default function AnswerCard({ entry, loading }) {
 
   if (!entry) return null;
 
-  const completeAnswer = getCompleteAnswer(entry);
+  const completeAnswer = [
+    entry.title,
+    answerContentRef.current?.innerText?.trim() || entry.answer,
+    entry.quick_facts?.length
+      ? entry.quick_facts.map((fact, index) => `${index + 1}. ${fact}`).join('\n')
+      : '',
+  ].filter(Boolean).join('\n\n').trim();
 
   const captureSelection = () => {
     const selection = window.getSelection?.();
@@ -167,8 +164,16 @@ export default function AnswerCard({ entry, loading }) {
           {entry.title && (
             <h2 className="mt-1.5 font-display text-fluid-title text-foreground">{entry.title}</h2>
           )}
-          <div className="mt-3">
+          <div ref={answerContentRef} className="mt-3">
             <AnswerBody text={entry.answer} />
+            {entry.quick_facts?.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{t('answer.quick')}</p>
+                <ul className="list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-foreground/70">
+                  {entry.quick_facts.map((item, index) => <li key={index}>{item}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
 
           {entry.quick_facts?.length > 0 && (
