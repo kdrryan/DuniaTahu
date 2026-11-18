@@ -227,3 +227,81 @@
     transform: translate3d(14px, -18px, 0) scale(1.05);
   }
 }
+
+/* Ratio Bot: subtle idle movement, responsive eyes, and greeting bubbles. */
+.ratio-bot-float {
+  animation: ratio-bot-float 4.8s ease-in-out infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ratio-bot-shadow {
+  animation: ratio-bot-shadow 4.8s ease-in-out infinite;
+}
+
+.ratio-bot-eyes-idle {
+  animation: ratio-bot-look 7.2s ease-in-out infinite;
+  transition: transform 220ms ease;
+}
+
+.ratio-bot-eyes-typing {
+  transform: translate3d(-2px, 7px, 0) rotate(5deg) scaleY(.84);
+  transition: transform 220ms ease;
+}
+
+.ratio-bot-eye-left {
+  transform-origin: center;
+  animation: ratio-bot-blink 6.2s ease-in-out infinite;
+}
+
+.ratio-bot-eye-right {
+  transform-origin: center;
+  animation: ratio-bot-blink 6.2s ease-in-out .12s infinite;
+}
+
+.ratio-bot-bubble {
+  transform-origin: bottom center;
+  animation: ratio-bot-bubble-in 260ms cubic-bezier(.2,.8,.2,1) both;
+  pointer-events: none;
+}
+
+@keyframes ratio-bot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes ratio-bot-shadow {
+  0%, 100% { transform: scaleX(1); opacity: .75; }
+  50% { transform: scaleX(.82); opacity: .45; }
+}
+
+@keyframes ratio-bot-look {
+  0%, 14%, 100% { transform: translate3d(0,0,0) rotate(0); }
+  24%, 34% { transform: translate3d(4px,-1px,0) rotate(3deg); }
+  48%, 58% { transform: translate3d(-4px,1px,0) rotate(-3deg); }
+  72%, 80% { transform: translate3d(1px,2px,0) rotate(1deg); }
+}
+
+@keyframes ratio-bot-blink {
+  0%, 43%, 46%, 100% { scale: 1 1; }
+  44.5% { scale: 1 .12; }
+}
+
+@keyframes ratio-bot-bubble-in {
+  from { opacity: 0; transform: translateY(5px) scale(.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ratio-bot-float,
+  .ratio-bot-shadow,
+  .ratio-bot-eyes-idle,
+  .ratio-bot-eye-left,
+  .ratio-bot-eye-right,
+  .ratio-bot-bubble {
+    animation: none !important;
+  }
+
+  .ratio-bot-eyes-typing {
+    transition: none;
+  }
+}
