@@ -22,11 +22,12 @@ const GREETINGS = {
   ],
 };
 
-export default function RatioMascot({ isTyping = false }) {
+export default function RatioMascot({ isTyping = false, isThinking = false }) {
   const { lang } = useLanguage();
   const [bubble, setBubble] = useState(null);
   const [canTap, setCanTap] = useState(true);
   const [isReacting, setIsReacting] = useState(false);
+  const expression = isThinking ? 'thinking' : isTyping ? 'curious' : isReacting ? 'happy' : 'idle';
   const bubbleTimer = useRef(null);
   const cooldownTimer = useRef(null);
   const reactionTimer = useRef(null);
@@ -99,7 +100,7 @@ export default function RatioMascot({ isTyping = false }) {
 
         <div
           aria-hidden="true"
-          className="absolute h-40 w-40 rounded-full bg-[#52769A]/20 blur-3xl sm:h-48 sm:w-48"
+          className="absolute h-32 w-32 rounded-full bg-[#52769A]/8 blur-2xl sm:h-40 sm:w-40"
         />
         <div
           aria-hidden="true"
@@ -115,10 +116,17 @@ export default function RatioMascot({ isTyping = false }) {
         >
           <span className={`ratio-bot-head relative flex h-full w-full items-center justify-center rounded-full ${isReacting ? 'ratio-bot-reacting' : ''}`}>
             <span aria-hidden="true" className="ratio-bot-gloss absolute inset-0 rounded-full" />
-            <span className={`ratio-bot-face relative z-10 flex items-center justify-center gap-[18px] ${isTyping ? 'ratio-bot-eyes-typing' : 'ratio-bot-eyes-idle'}`}>
+            <span className={`ratio-bot-face ratio-bot-face-${expression} relative z-10 flex items-center justify-center gap-[18px]`}>
               <span className="ratio-bot-eye ratio-bot-eye-left block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
               <span className="ratio-bot-eye ratio-bot-eye-right block h-[34px] w-[15px] rounded-full bg-white sm:h-[38px] sm:w-[17px]" />
             </span>
+            {expression === 'thinking' && (
+              <span className="ratio-bot-thinking-dots absolute bottom-[25%] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1" aria-label={lang === 'en' ? 'Thinking' : 'Sedang berpikir'}>
+                <i />
+                <i />
+                <i />
+              </span>
+            )}
           </span>
         </button>
       </div>
