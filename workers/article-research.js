@@ -48,12 +48,12 @@ export function retainEvidenceBackedFindings(value, abstract) {
   if (!value || !Array.isArray(value.keyFindings) || typeof abstract !== 'string') {
     return { findings: [], rejectedCount: 0 };
   }
-  const normalizedAbstract = abstract.replace(/\\s+/g, ' ').toLocaleLowerCase();
+  const normalizedAbstract = abstract.replace(/\s+/g, ' ').toLocaleLowerCase();
   const findings = value.keyFindings.filter((finding) => {
     if (!finding || typeof finding.claim !== 'string' || !finding.claim.trim() ||
         typeof finding.evidenceFromAbstract !== 'string' || !finding.evidenceFromAbstract.trim() ||
         !['high', 'medium', 'low'].includes(finding.confidence)) return false;
-    const evidence = finding.evidenceFromAbstract.replace(/\\s+/g, ' ').trim().toLocaleLowerCase();
+    const evidence = finding.evidenceFromAbstract.replace(/\s+/g, ' ').trim().toLocaleLowerCase();
     return normalizedAbstract.includes(evidence);
   });
   return { findings, rejectedCount: value.keyFindings.length - findings.length };
@@ -80,8 +80,8 @@ export function validateResearchOutput(value, abstract = '') {
       }
       if (finding && typeof abstract === 'string' && abstract &&
           typeof finding.evidenceFromAbstract === 'string' && finding.evidenceFromAbstract.trim()) {
-        const normalizedAbstract = abstract.replace(/\\s+/g, ' ').toLocaleLowerCase();
-        const normalizedEvidence = finding.evidenceFromAbstract.replace(/\\s+/g, ' ').trim().toLocaleLowerCase();
+        const normalizedAbstract = abstract.replace(/\s+/g, ' ').toLocaleLowerCase();
+        const normalizedEvidence = finding.evidenceFromAbstract.replace(/\s+/g, ' ').trim().toLocaleLowerCase();
         if (!normalizedAbstract.includes(normalizedEvidence)) {
           errors.push('keyFindings[' + index + '].evidenceFromAbstract is not present in the source abstract.');
         }
