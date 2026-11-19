@@ -12,7 +12,13 @@ function RatioMark() {
         src="/brand/ratiobot-mark.svg"
         alt=""
         draggable="false"
-        className="block h-full w-full select-none"
+        className="block h-full w-full select-none dark:hidden"
+      />
+      <img
+        src="/brand/ratiobot-mark-dark.svg"
+        alt=""
+        draggable="false"
+        className="hidden h-full w-full select-none dark:block"
       />
     </span>
   );
