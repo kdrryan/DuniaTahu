@@ -103,6 +103,10 @@ export default function AskBox({ onAsk, loading, onTypingChange, onGazeChange })
               onGazeChange?.(getCaretGaze(event.target));
             }}
             onClick={(event) => onGazeChange?.(getCaretGaze(event.target))}
+            onSelect={(event) => {
+              const textarea = event.currentTarget;
+              window.requestAnimationFrame(() => onGazeChange?.(getCaretGaze(textarea)));
+            }}
             onKeyUp={(event) => onGazeChange?.(getCaretGaze(event.target))}
             onBlur={() => {
               onTypingChange?.(false);
