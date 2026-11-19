@@ -6,7 +6,7 @@ const MODEL = "gemini-3.5-flash-lite";
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
 const GITHUB_RELEASE_URL =
-  "https://api.github.com/repos/kdrryan/DuniaTahu/releases/latest";
+  "https://api.github.com/repos/kdrryan/Ratio/releases/latest";
 
 const CATEGORIES = [
   { id: "sains", name: "sains dan fisika sehari-hari" },
@@ -187,7 +187,7 @@ async function getLatestVersion() {
   const response = await fetch(GITHUB_RELEASE_URL, {
     headers: {
       "Accept": "application/vnd.github+json",
-      "User-Agent": "DuniaTahu-Updater",
+      "User-Agent": "Ratio-Updater",
     },
     cf: {
       cacheTtl: 300,
