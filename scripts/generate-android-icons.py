@@ -1,5 +1,5 @@
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public/brand/ratio-orbit-white-white-dot-dark-background.png"
@@ -10,8 +10,16 @@ if not SOURCE.is_file():
 
 with Image.open(SOURCE) as original:
     image = original.convert("RGBA")
-    if image.width != image.height:
-        raise SystemExit("Official launcher PNG must be square; refusing to crop or distort it.")
+
+    # Preserve the complete official artwork and its aspect ratio.
+    # If the source is not square, place it centered on a square canvas
+    # using its corner background color instead of cropping or stretching it.
+    side = max(image.width, image.height)
+    background = image.getpixel((0, 0))
+    square = Image.new("RGBA", (side, side), background)
+    fitted = ImageOps.contain(image, (side, side), method=Image.Resampling.LANCZOS)
+    offset = ((side - fitted.width) // 2, (side - fitted.height) // 2)
+    square.alpha_composite(fitted, dest=offset)
 
     sizes = {
         "mipmap-mdpi": 48,
@@ -23,5 +31,5 @@ with Image.open(SOURCE) as original:
     for folder, size in sizes.items():
         destination = RES / folder / "ratio_launcher.png"
         destination.parent.mkdir(parents=True, exist_ok=True)
-        image.resize((size, size), Image.Resampling.LANCZOS).save(destination, format="PNG", optimize=True)
+        square.resize((size, size), Image.Resampling.LANCZOS).save(destination, format="PNG", optimize=True)
         print(f"Generated {destination.relative_to(ROOT)} ({size}x{size})")
