@@ -306,7 +306,10 @@
 }
 
 .ratio-bot-face-curious .ratio-bot-eyes {
-  transform: translate(-50%, -50%) translateY(-2px) scale(1.06);
+  transform:
+    translate(-50%, -50%)
+    translate3d(var(--gaze-x, 0px), calc(var(--gaze-y, 0px) - 2px), 0)
+    scale(1.06);
 }
 
 /* Thinking: retain the original two capsules and add a third identical one. */
