@@ -53,15 +53,16 @@ const getCaretGaze = (textarea) => {
   document.body.appendChild(mirror);
 
   const markerRect = marker.getBoundingClientRect();
+  const mirrorRect = mirror.getBoundingClientRect();
   const inputRect = textarea.getBoundingClientRect();
-  const x = ((markerRect.left - inputRect.left) / Math.max(inputRect.width, 1)) * 2 - 1;
-  const y = (markerRect.top + markerRect.height / 2 - inputRect.top) / Math.max(inputRect.height, 1);
+
+  // Convert the caret position from the mirror into the real textarea's
+  // viewport coordinates, accounting for the textarea's current scroll.
+  const clientX = inputRect.left + markerRect.left - mirrorRect.left - textarea.scrollLeft;
+  const clientY = inputRect.top + markerRect.top - mirrorRect.top - textarea.scrollTop + markerRect.height / 2;
   mirror.remove();
 
-  return {
-    x: Math.max(-1, Math.min(1, x)),
-    y: Math.max(0, Math.min(1, y)),
-  };
+  return { clientX, clientY };
 };
 
 export default function AskBox({ onAsk, loading, onTypingChange, onGazeChange }) {
