@@ -239,6 +239,15 @@
   }
 }
 
+/* Dark theme: invert the interactive RatioBot to a white head with dark eyes. */
+.dark .ratio-bot-head {
+  background: #fff;
+}
+
+.dark .ratio-bot-eye {
+  background-color: #050506;
+}
+
 /* Ratio Bot: flat 2D silhouette with smooth eye-to-thinking transition. */
 .ratio-bot-float {
   -webkit-tap-highlight-color: transparent;
