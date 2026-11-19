@@ -4,7 +4,7 @@ import { Browser } from '@capacitor/browser';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { LanguageProvider } from '@/lib/LanguageContext';
 import ScrollToTop from './components/ScrollToTop';
@@ -27,10 +27,50 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+function AppRoutes({ sidebarCollapsed, onToggleSidebar }) {
+  const { pathname } = useLocation();
+  const isReadingArticle = pathname.startsWith('/articles/') && pathname !== '/articles';
+
+  return (
+    <>
+      {!isReadingArticle && (
+        <AppNavigation
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={onToggleSidebar}
+        />
+      )}
+      <div className={isReadingArticle ? '' : sidebarCollapsed ? 'md:pl-14' : 'md:pl-[232px]'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/ratio" element={<Ratio />} />
+          <Route path="/explore" element={<ArticleLibrary />} />
+          <Route path="/saved" element={<Saved />} />
+          <Route path="/articles" element={<ArticleLibrary />} />
+          <Route path="/articles/:articleId" element={<ArticleDetail />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </div>
+    </>
+  );
+}
+
 function App() {
   const [updateInfo, setUpdateInfo] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const updateDialogOpenRef = useRef(false);
+
+  useEffect(() => {
+    const suppressBrowserContextMenu = (event) => {
+      event.preventDefault();
+    };
+
+    // Suppress the browser's long-press/right-click menu across the whole app.
+    // Text selection remains available inside article content for Ratio's own toolbar.
+    document.addEventListener('contextmenu', suppressBrowserContextMenu, true);
+    return () => {
+      document.removeEventListener('contextmenu', suppressBrowserContextMenu, true);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -86,21 +126,10 @@ function App() {
         <ScrollToTop />
 
         <LanguageProvider>
-          <AppNavigation
+          <AppRoutes
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}
           />
-          <div className={sidebarCollapsed ? 'md:pl-14' : 'md:pl-[232px]'}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/ratio" element={<Ratio />} />
-              <Route path="/explore" element={<ArticleLibrary />} />
-              <Route path="/saved" element={<Saved />} />
-              <Route path="/articles" element={<ArticleLibrary />} />
-              <Route path="/articles/:articleId" element={<ArticleDetail />} />
-              <Route path="*" element={<PageNotFound />} />
-            </Routes>
-          </div>
         </LanguageProvider>
 
         <AlertDialog

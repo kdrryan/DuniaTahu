@@ -4,10 +4,23 @@ import { useLanguage } from '@/lib/LanguageContext';
 
 function RatioMark() {
   return (
-    <>
-      <img src="/brand/ratio-orbit-black-black-dot-light-background.png" alt="" aria-hidden="true" className="block h-6 w-6 shrink-0 rounded-md object-contain dark:hidden" draggable="false" />
-      <img src="/brand/ratio-orbit-white-white-dot-dark-background.png" alt="" aria-hidden="true" className="hidden h-6 w-6 shrink-0 rounded-md object-contain dark:block" draggable="false" />
-    </>
+    <span
+      aria-hidden="true"
+      className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-transparent p-0 dark:bg-white dark:p-px"
+    >
+      <img
+        src="/brand/ratiobot-mark.svg"
+        alt=""
+        draggable="false"
+        className="block h-full w-full select-none dark:hidden"
+      />
+      <img
+        src="/brand/ratiobot-mark-dark.svg"
+        alt=""
+        draggable="false"
+        className="hidden h-full w-full select-none dark:block"
+      />
+    </span>
   );
 }
 
@@ -32,7 +45,7 @@ export default function AppNavigation({ sidebarCollapsed, onToggleSidebar }) {
   const { t } = useLanguage();
   const destinations = [
     { id: 'home', to: '/', label: t('navigation.home'), Icon: House },
-    { id: 'ratio', to: '/ratio#tanya', label: t('navigation.ratio') },
+    { id: 'ratio', to: '/ratio', label: t('navigation.ratio') },
     { id: 'explore', to: '/explore', label: t('navigation.explore'), Icon: Compass },
     { id: 'saved', to: '/saved', label: t('navigation.saved'), Icon: Bookmark },
   ];

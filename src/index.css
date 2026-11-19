@@ -60,7 +60,7 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62% 46%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.1;
+    --border: 0 0% 100% / 0.025;
     --input: 220 10% 24%;
     --ring: 0 0% 90%;
     --chart-1: 0 0% 96%;
@@ -74,7 +74,7 @@
     --sidebar-primary-foreground: 220 16% 8%;
     --sidebar-accent: 220 11% 16%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 100% / 0.1;
+    --sidebar-border: 0 0% 100% / 0.025;
     --sidebar-ring: 0 0% 90%;
   }
 }
@@ -92,6 +92,30 @@
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "cv11", "ss01";
     font-size: 15px;
+  }
+
+  /* Disable accidental long-press text selection throughout the app. */
+  #root,
+  #root * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Keep text selection enabled only where the user explicitly needs it. */
+  #root input,
+  #root textarea,
+  #root [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  #root .reader-content,
+  #root .reader-content *,
+  #root .ratio-selectable-text,
+  #root .ratio-selectable-text * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
   }
 
   ::selection {
@@ -122,7 +146,6 @@
 
   /* Liquid glass surface */
   .glass {
-    position: relative;
     background-color: hsl(var(--card) / 0.62);
     background-image: linear-gradient(
       135deg,
@@ -140,6 +163,7 @@
   }
 
   .dark .glass {
+    border-width: 0.5px;
     background-color: hsl(var(--card) / 0.42);
     background-image: linear-gradient(
       135deg,
@@ -147,9 +171,9 @@
       hsl(0 0% 100% / 0.03) 42%,
       hsl(0 0% 100% / 0) 70%
     );
-    border-color: hsl(0 0% 100% / 0.1);
+    border-color: hsl(0 0% 100% / 0.025);
     box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.08),
+      inset 0 1px 0 hsl(0 0% 100% / 0.015),
       0 24px 60px -30px hsl(0 0% 0% / 0.9);
   }
 
@@ -162,9 +186,10 @@
   }
 
   .dark .glass-soft {
+    border-width: 0.75px;
     background-color: hsl(0 0% 100% / 0.04);
-    border-color: hsl(0 0% 100% / 0.08);
-    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06);
+    border-color: hsl(0 0% 100% / 0.02);
+    box-shadow: none;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -185,6 +210,15 @@
   }
 }
 
+
+/* Keep outlined cards subtle in dark mode across every page. */
+.dark [class*="rounded-"][class~="border"],
+.dark [class*="rounded-"][class*="border-border"],
+.dark [class*="rounded-"][class*="border-foreground"] {
+  border-width: 0.5px;
+  border-color: hsl(var(--border));
+}
+
 @keyframes floaty {
   0%,
   100% {
@@ -202,5 +236,164 @@
   }
   50% {
     transform: translate3d(14px, -18px, 0) scale(1.05);
+  }
+}
+
+/* Dark theme: invert the interactive RatioBot to a white head with dark eyes. */
+.dark .ratio-bot-head {
+  background: #fff;
+}
+
+.dark .ratio-bot-eye {
+  background-color: #050506;
+}
+
+/* Ratio Bot: flat 2D silhouette with smooth eye-to-thinking transition. */
+.ratio-bot-float {
+  -webkit-tap-highlight-color: transparent;
+  animation: ratio-bot-float 5.2s ease-in-out infinite;
+}
+
+.ratio-bot-head {
+  background: #050506;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
+  transition: transform 220ms ease;
+}
+
+.ratio-bot-face {
+  width: 58px;
+  height: 42px;
+  transition: transform 320ms cubic-bezier(.2,.75,.25,1);
+}
+
+.ratio-bot-face-idle {
+  animation: ratio-bot-look 8.5s ease-in-out infinite;
+}
+
+.ratio-bot-face-curious {
+  transform: translateY(-3px) scale(1.06);
+}
+
+.ratio-bot-face-happy {
+  transform: translateY(-1px) scale(1.045);
+}
+
+.ratio-bot-face-thinking {
+  transform: translateY(-2px);
+}
+
+.ratio-bot-eyes {
+  opacity: 1;
+  transform: translate(-50%, -50%) translate3d(var(--gaze-x, 0px), var(--gaze-y, 0px), 0);
+  transition:
+    opacity 300ms ease,
+    transform 280ms cubic-bezier(.2,.75,.25,1),
+    gap 320ms ease;
+  will-change: transform;
+}
+
+.ratio-bot-eyes-idle {
+  transition: transform 650ms cubic-bezier(.2,.75,.25,1);
+}
+
+.ratio-bot-eyes-tracking {
+  transition: transform 180ms cubic-bezier(.2,.75,.25,1);
+}
+
+.ratio-bot-eye {
+  flex: 0 0 auto;
+  transform: none;
+  transform-origin: center;
+  box-shadow: none;
+  transition:
+    width 420ms cubic-bezier(.2,.75,.25,1),
+    height 420ms cubic-bezier(.2,.75,.25,1),
+    border-radius 420ms ease,
+    transform 420ms ease;
+}
+
+.ratio-bot-face-curious .ratio-bot-eyes {
+  transform:
+    translate(-50%, -50%)
+    translate3d(var(--gaze-x, 0px), calc(var(--gaze-y, 0px) - 2px), 0)
+    scale(1.06);
+}
+
+/* Thinking: retain the original two capsules and add a third identical one. */
+.ratio-bot-face-thinking .ratio-bot-eyes {
+  gap: 10px;
+  transform: translate(-50%, -50%);
+}
+
+.ratio-bot-face-thinking .ratio-bot-eye-left,
+.ratio-bot-face-thinking .ratio-bot-eye-right {
+  animation: ratio-bot-thinking-outer 900ms ease-in-out infinite;
+}
+
+.ratio-bot-face-thinking .ratio-bot-eye-center {
+  animation: ratio-bot-thinking-center 900ms ease-in-out infinite;
+}
+
+/* A gentle click response without changing or blinking the eyes. */
+.ratio-bot-reacting {
+  animation: ratio-bot-tap-reaction 650ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.ratio-bot-bubble {
+  transform-origin: bottom center;
+  animation: ratio-bot-bubble-in 260ms cubic-bezier(.2,.8,.2,1) both;
+  pointer-events: none;
+}
+
+@keyframes ratio-bot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes ratio-bot-look {
+  0%, 16%, 100% { transform: translateY(0) translateX(0); }
+  25%, 34% { transform: translateY(-1px) translateX(3px); }
+  49%, 58% { transform: translateY(1px) translateX(-3px); }
+  73%, 81% { transform: translateY(2px) translateX(1px); }
+}
+
+@keyframes ratio-bot-thinking-outer {
+  0%, 100% { transform: translateY(-5px); }
+  50% { transform: translateY(5px); }
+}
+
+@keyframes ratio-bot-thinking-center {
+  0%, 100% { transform: translateY(5px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes ratio-bot-tap-reaction {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.055); }
+  70% { transform: scale(.985); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ratio-bot-bubble-in {
+  from { opacity: 0; transform: translateY(5px) scale(.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ratio-bot-float,
+  .ratio-bot-face-idle,
+  .ratio-bot-bubble,
+  .ratio-bot-reacting {
+    animation: none !important;
+  }
+
+  .ratio-bot-face,
+  .ratio-bot-eyes,
+  .ratio-bot-eyes-idle,
+  .ratio-bot-eyes-tracking,
+  .ratio-bot-eye {
+    transition: none !important;
   }
 }

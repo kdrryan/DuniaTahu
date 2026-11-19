@@ -1,40 +1,20 @@
 import ThemeToggle from '@/components/ThemeToggle';
 import SettingsButton from '@/components/SettingsButton';
 import { useLanguage } from '@/lib/LanguageContext';
-
-function RatioLogo() {
-  return (
-    <>
-      <img
-        src="/brand/ratio-orbit-white-white-dot-dark-background.png"
-        alt="Ratio"
-        className="block h-9 w-10 shrink-0 object-contain dark:hidden"
-        draggable="false"
-      />
-      <img
-        src="/brand/ratio-orbit-black-black-dot-light-background.png"
-        alt="Ratio"
-        className="hidden h-9 w-10 shrink-0 object-contain dark:block"
-        draggable="false"
-      />
-    </>
-  );
-}
+import { Link } from 'react-router-dom';
 
 export default function BrandHeader() {
   const { t } = useLanguage();
 
   return (
     <header className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <RatioLogo />
-        <div className="min-w-0">
-          <p className="truncate font-display text-[15px] leading-tight text-foreground">Ratio</p>
-          <p className="truncate text-[10px] font-semibold tracking-[0.04em] text-muted-foreground">
-            {t('header.tagline')}
-          </p>
-        </div>
-      </div>
+      <Link
+        to="/"
+        aria-label="Ratio home"
+        className="min-w-0 font-display text-[24px] font-bold leading-none tracking-[-0.06em] text-foreground sm:text-[26px]"
+      >
+        ratio.
+      </Link>
 
       <div className="flex shrink-0 items-center gap-2">
         <a

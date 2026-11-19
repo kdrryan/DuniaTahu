@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, BookOpen, Clock3, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import BrandHeader from '@/components/BrandHeader';
-import { fetchArticles } from '@/lib/api';
+import FunFactCard from '@/components/FunFactCard';
+import { fetchArticles, fetchDailyFact } from '@/lib/api';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function Home() {
   const { lang, t } = useLanguage();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [fact, setFact] = useState(null);
+  const [factLoading, setFactLoading] = useState(true);
+  const [factFailed, setFactFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -27,6 +32,33 @@ export default function Home() {
       });
     return () => { active = false; };
   }, [lang]);
+
+  useEffect(() => {
+    let active = true;
+    setFact(null);
+    setFactLoading(true);
+    setFactFailed(false);
+    fetchDailyFact(lang)
+      .then((data) => {
+        if (active) setFact(data);
+      })
+      .catch(() => {
+        if (active) setFactFailed(true);
+      })
+      .finally(() => {
+        if (active) setFactLoading(false);
+      });
+    return () => { active = false; };
+  }, [lang]);
+
+  const explainFact = (dailyFact) => {
+    if (!dailyFact?.fact) return;
+    navigate('/ratio#tanya', {
+      state: {
+        initialQuestion: `${t('home.explain')} "${dailyFact.fact}"`,
+      },
+    });
+  };
 
   const featured = articles[0];
   const moreArticles = articles.slice(1);
@@ -48,6 +80,14 @@ export default function Home() {
               {t('home.discover.subtitle')}
             </p>
           </section>
+
+          {factFailed ? (
+            <section className="rounded-2xl border border-border/70 bg-card px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
+              {t('home.error.fact')}
+            </section>
+          ) : (
+            <FunFactCard fact={fact} loading={factLoading} onExplain={explainFact} />
+          )}
 
           {loading && (
             <section className="space-y-3">
