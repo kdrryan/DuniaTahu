@@ -36,6 +36,13 @@ export default function RatioMascot({ isTyping = false, isThinking = false, typi
   const headRef = useRef(null);
   const gazeResetTimer = useRef(null);
   const [screenGaze, setScreenGaze] = useState(null);
+  const headRect = headRef.current?.getBoundingClientRect();
+  const typingGazeX = isTyping && typingGaze && headRect
+    ? Math.max(-1, Math.min(1, (typingGaze.clientX - (headRect.left + headRect.width / 2)) / (headRect.width * 0.85)))
+    : 0;
+  const typingGazeY = isTyping && typingGaze && headRect
+    ? Math.max(-1, Math.min(1, (typingGaze.clientY - (headRect.top + headRect.height / 2)) / (headRect.height * 0.85)))
+    : 0;
 
   useEffect(() => () => {
     window.clearTimeout(bubbleTimer.current);
@@ -150,8 +157,8 @@ export default function RatioMascot({ isTyping = false, isThinking = false, typi
               <span
                 className={`ratio-bot-eyes absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-[18px] ${isThinking ? 'ratio-bot-eyes-thinking' : isTyping || screenGaze ? 'ratio-bot-eyes-tracking' : 'ratio-bot-eyes-idle'}`}
                 style={{
-                  '--gaze-x': `${(isTyping ? (typingGaze?.x ?? 0) : (screenGaze?.x ?? 0)) * 8}px`,
-                  '--gaze-y': `${isTyping ? ((typingGaze?.y ?? 0.5) - 0.5) * 8 : (screenGaze?.y ?? 0) * 6}px`,
+                  '--gaze-x': `${(isTyping ? typingGazeX : (screenGaze?.x ?? 0)) * 8}px`,
+                  '--gaze-y': `${(isTyping ? typingGazeY : (screenGaze?.y ?? 0)) * 7}px`,
                 }}
                 role={isThinking ? 'status' : undefined}
                 aria-label={isThinking ? (lang === 'en' ? 'Thinking' : 'Sedang berpikir') : undefined}
